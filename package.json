@@ -1,0 +1,14 @@
+{
+  "name": "sync-packages-action",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "simple-git": "^2.36.0",
+    "node-fetch": "^2.6.1",
+    "js-yaml": "^4.0.0",
+    "octokit": "^1.0.0"
+  }
+}
