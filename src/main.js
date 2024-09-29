@@ -6,19 +6,24 @@ const path = require('path');
 
 const readBlockeraFiles = require('./helpers');
 
-async function run() {
+/**
+ * Main function to handle the GitHub Action workflow.
+ *
+ * @returns {Promise<void>}
+ */
+const run = async () => {
     try {
-        // Set up Git configuration
+        // Set up Git configuration.
         const git = simpleGit();
         await git.addConfig('user.name', 'blockerabot');
         await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com');
 
-        // Read blockera-pm.json files
-        const { packagePaths, packageRepos } = readBlockeraFiles();
+        // Read blockera-pm.json files.
+        const {packagePaths, packageRepos} = readBlockeraFiles();
         core.info(`Package paths: ${packagePaths}`);
         core.info(`Dependent repos: ${packageRepos}`);
 
-        // Check for changes in packages
+        // Check for changes in packages.
         const diff = await git.diff(['--name-only', 'HEAD^', 'HEAD']);
         packagePaths.forEach(path => {
             if (diff.includes(path)) {
@@ -28,16 +33,16 @@ async function run() {
             }
         });
 
-        // Clone dependent repos and sync changes
+        // Clone dependent repos and sync changes.
         for (const repo of packageRepos) {
             const repoDir = path.join('./', repo);
             await git.clone(`https://github.com/blockeraai/${repo}.git`, repoDir);
 
-            // Set remote with access token for pushing
+            // Set remote with access token for pushing.
             await git.cwd(repoDir);
             await git.remote(['set-url', 'origin', `https://x-access-token:${process.env.BLOCKERABOT_PAT}@github.com/blockeraai/${repo}.git`]);
 
-            // Sync package directories
+            // Sync package directories.
             for (const packagePath of packagePaths) {
                 if (repo !== github.context.repo.repo) {
                     const srcDir = path.join('./', packagePath);
@@ -48,16 +53,16 @@ async function run() {
                 }
             }
 
-            // Create branch and commit changes
+            // Create branch and commit changes.
             await git.checkout(['-b', 'sync-packages-from-primary']);
             await git.add('./*');
             await git.commit('Sync shared packages from primary repo');
 
-            // Push changes and create PR
+            // Push changes and create PR.
             await git.push('origin', 'sync-packages-from-primary');
             core.info(`Changes pushed to ${repo}`);
 
-            // Use octokit to create a pull request
+            // Use octokit to create a pull request.
             const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
             await octokit.pulls.create({
                 owner: github.context.repo.owner,
@@ -73,4 +78,12 @@ async function run() {
     }
 }
 
-run();
+const result = run();
+
+result.catch((error) => {
+    core.setFailed(error.message);
+});
+
+module.exports = {
+    run
+};
