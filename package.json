@@ -1,8 +1,9 @@
 {
   "name": "blockera-pm",
   "version": "1.0.0",
-  "main": "src/main.js",
+  "main": "build/index.js",
   "scripts": {
+    "build": "microbundle -f cjs --define 'navigator={}' --compress --no-sourcemap --target node src/main.js",
     "lint": "eslint .",
     "test": "jest"
   },
@@ -16,7 +17,8 @@
     "path": "^0.12.7",
     "simple-git": "3.16.0",
     "@types/jest": "^29.5.13",
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "microbundle": "^0.12.4"
   },
   "prettier": {
     "useTabs": true,
