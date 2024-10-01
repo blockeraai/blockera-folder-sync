@@ -22,8 +22,10 @@ describe('Sync Packages Action', () => {
 
         action.run().then(() => {
             // Test that git.addConfig was called with correct arguments.
-            expect(git.addConfig).toHaveBeenCalledWith('user.name', 'blockerabot');
-            expect(git.addConfig).toHaveBeenCalledWith('user.email', 'blockeraai+githubbot@gmail.com');
+            expect(git.addConfig).toHaveBeenCalledWith('user.name', 'blockerabot', undefined, {global: true});
+            expect(git.addConfig).toHaveBeenCalledWith('user.email', 'blockeraai+githubbot@gmail.com', undefined, {global: true});
+
+            expect(git.addConfig).toHaveBeenCalledTimes(4);
         });
     });
 

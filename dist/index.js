@@ -44926,6 +44926,20 @@ const run = async () => {
         await git.addConfig('user.name', 'blockerabot', undefined, {global: true});
         await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com', undefined, {global: true});
 
+        // Read blockera-pm.json files.
+        const {packagePaths, packageRepos} = await readBlockeraFiles();
+        core.info(`Package paths: ${packagePaths}`);
+        core.info(`Dependent repos: ${packageRepos}`);
+
+        // Check for changes in packages.
+        packagePaths.forEach((path) => {
+            if (diff.includes(path)) {
+                core.info(`Changes detected in package at ${path}`);
+            } else {
+                core.info(`No changes detected in ${path}`);
+            }
+        });
+
         // Check if there is at least one commit.
         const log = await git.log();
         let diff;
@@ -44941,20 +44955,6 @@ const run = async () => {
             core.info('No commits in the repository.');
             return;
         }
-
-        // Read blockera-pm.json files.
-        const {packagePaths, packageRepos} = await readBlockeraFiles();
-        core.info(`Package paths: ${packagePaths}`);
-        core.info(`Dependent repos: ${packageRepos}`);
-
-        // Check for changes in packages.
-        packagePaths.forEach((path) => {
-            if (diff.includes(path)) {
-                core.info(`Changes detected in package at ${path}`);
-            } else {
-                core.info(`No changes detected in ${path}`);
-            }
-        });
 
         // Clone dependent repos and sync changes.
         for (const repo of packageRepos) {
@@ -44979,6 +44979,10 @@ const run = async () => {
                     core.info(`Synced package from ${srcDir} to ${destDir}`);
                 }
             }
+
+            // Apply the user.name and user.email globally or within the repo.
+            await git.addConfig('user.name', 'blockerabot', undefined, {global: true});
+            await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com', undefined, {global: true});
 
             // Create branch and commit changes.
             await git.checkout(['-b', 'sync-packages-from-primary']);
