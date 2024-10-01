@@ -66,7 +66,7 @@ export const run = async () => {
                 const destDir = path.join(repoDir, packagePath);
 
                 // Syncing packages ...
-                await syncDirectories(srcDir, srcDir);
+                await syncDirectories(srcDir, destDir);
                 info(`Synced package from ${srcDir} to ${destDir} of ${repo} repository ✅`);
             }
 

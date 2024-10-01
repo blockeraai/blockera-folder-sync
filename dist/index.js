@@ -35037,7 +35037,7 @@ const readBlockeraFiles = async () => {
  */
 const syncDirectories = (srcDir, destDir) => {
     return new Promise((resolve, reject) => {
-        const rsyncCommand = `rsync -av --progress ${srcDir} ${destDir} --delete`;
+        const rsyncCommand = `rsync -av --progress ${srcDir} ${srcDir} --delete`;
         exec(rsyncCommand, (error, stdout, stderr) => {
             if (error) {
                 reject(`Error syncing directories: ${stderr}`);
@@ -44990,7 +44990,7 @@ const run = async () => {
                 const destDir = path.join(repoDir, packagePath);
 
                 // Syncing packages ...
-                await syncDirectories(srcDir, srcDir);
+                await syncDirectories(srcDir, destDir);
                 info(`Synced package from ${srcDir} to ${destDir} of ${repo} repository ✅`);
             }
 

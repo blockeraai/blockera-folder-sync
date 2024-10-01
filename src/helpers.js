@@ -41,7 +41,7 @@ export const readBlockeraFiles = async () => {
  */
 export const syncDirectories = (srcDir, destDir) => {
     return new Promise((resolve, reject) => {
-        const rsyncCommand = `rsync -av --progress ${srcDir} ${destDir} --delete`;
+        const rsyncCommand = `rsync -av --progress ${srcDir} ${srcDir} --delete`;
         exec(rsyncCommand, (error, stdout, stderr) => {
             if (error) {
                 reject(`Error syncing directories: ${stderr}`);
