@@ -44959,7 +44959,7 @@ const run = async () => {
         // Clone dependent repos and sync changes.
         for (const repo of packageRepos) {
             const repoDir = path.join('./', repo);
-            await git.clone(`https://github.com/blockeraai/${repo}.git`, repoDir);
+            await git.clone(`https://x-access-token:${process.env.BLOCKERABOT_PAT}@github.com/blockeraai/${repo}.git`, repoDir);
 
             // Set remote with access token for pushing.
             await git.cwd(repoDir);
