@@ -44987,6 +44987,8 @@ const run = async () => {
                     continue;
                 }
 
+                console.log('Repository in progress: ' + github.context.repo.repo + ' ...');
+
                 // Skip current repository!
                 if (repo === github.context.repo.repo) {
                     continue;
