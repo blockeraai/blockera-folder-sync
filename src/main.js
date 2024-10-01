@@ -1,4 +1,4 @@
-const core = require('@actions/core');
+const {info, setFailed, getInput} = require('@actions/core');
 const github = require('@actions/github');
 const simpleGit = require('simple-git');
 const fs = require('fs');
@@ -70,8 +70,8 @@ export const run = async () => {
 
         // Read blockera-pm.json files.
         const {packagePaths, packageRepos} = await readBlockeraFiles();
-        core.info(`Package paths: ${packagePaths}`);
-        core.info(`Dependent repos: ${packageRepos}`);
+        info(`Package paths: ${packagePaths}`);
+        info(`Dependent repos: ${packageRepos}`);
 
         // Check if there is at least one commit.
         const log = await git.log();
@@ -85,30 +85,30 @@ export const run = async () => {
             diff = await git.diff(['--name-only', 'HEAD']);
         } else {
             // No commits, skip diff.
-            core.info('No commits in the repository.');
+            info('No commits in the repository.');
             return;
         }
 
         // Check for changes in packages.
         packagePaths.forEach((path) => {
             if (diff.includes(path)) {
-                core.info(`Changes detected in package at ${path}`);
+                info(`Changes detected in package at ${path}`);
             } else {
-                core.info(`No changes detected in ${path}`);
+                info(`No changes detected in ${path}`);
             }
         });
 
         // Clone dependent repos and sync changes.
         for (const repo of packageRepos) {
             const repoDir = path.join('./', repo);
-            await git.clone(`https://x-access-token:${process.env.BLOCKERABOT_PAT}@github.com/blockeraai/${repo}.git`, repoDir);
+            await git.clone(`https://x-access-token:${getInput('BLOCKERABOT_PAT')}@github.com/blockeraai/${repo}.git`, repoDir);
 
             // Set remote with access token for pushing.
             await git.cwd(repoDir);
             await git.remote([
                 'set-url',
                 'origin',
-                `https://x-access-token:${process.env.BLOCKERABOT_PAT}@github.com/blockeraai/${repo}.git`
+                `https://x-access-token:${getInput('BLOCKERABOT_PAT')}@github.com/blockeraai/${repo}.git`
             ]);
 
             // Sync package directories.
@@ -118,7 +118,7 @@ export const run = async () => {
                     const destDir = path.join(repoDir, packagePath);
 
                     await syncDirectories(srcDir, destDir);
-                    core.info(`Synced package from ${srcDir} to ${destDir}`);
+                    info(`Synced package from ${srcDir} to ${destDir}`);
                 }
             }
 
@@ -133,26 +133,26 @@ export const run = async () => {
 
             // Push changes and create PR.
             await git.push('origin', 'sync-packages-from-primary');
-            core.info(`Changes pushed to ${repo}`);
+            info(`Changes pushed to ${repo}`);
 
             // Use octokit to create a pull request.
-            const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+            const octokit = github.getOctokit(getInput('GITHUB_TOKEN'));
             await octokit.pulls.create({
                 owner: github.context.repo.owner,
                 repo: repo,
                 title: 'Sync package from Primary Repo',
                 head: 'sync-packages-from-primary',
                 base: 'master',
-                body: 'This PR syncs the package from the ' + process.env.REPOSITORY_NAME + ' repo.'
+                body: 'This PR syncs the package from the ' + getInput('REPOSITORY_NAME') + ' repo.'
             });
         }
     } catch (error) {
-        core.setFailed(error.message);
+        setFailed(error.message);
     }
 };
 
 const result = run();
 
 result.catch((error) => {
-    core.setFailed(error.message);
+    setFailed(error.message);
 });
