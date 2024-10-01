@@ -45024,11 +45024,11 @@ const run = async () => {
 			const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
 			await octokit.rest.pulls.create({
 				owner: github.context.repo.owner,
-				repo: repo,
-				title: `Sync package from ${repo} Repo`,
-				head: `sync-packages-from-${repo}`,
+				repo,
+				title: `Sync package from ${github.context.repo.repo} Repo`,
+				head: `sync-packages-from-${github.context.repo.repo}`,
 				base: 'master',
-				body: `This PR syncs the package from the (${repo})[https://github.com/blockeraai/${repo}] repository.`
+				body: `This PR syncs the package from the [${github.context.repo.repo}](https://github.com/blockeraai/${repo}) repository.`
 			});
 		}
 	} catch (error) {
