@@ -44922,11 +44922,11 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
 /* harmony export */   run: () => (/* binding */ run)
 /* harmony export */ });
-const {info, setFailed, getInput} = __nccwpck_require__(7484);
+const { info, setFailed, getInput } = __nccwpck_require__(7484);
 const github = __nccwpck_require__(3228);
 const simpleGit = __nccwpck_require__(9065);
 const path = __nccwpck_require__(6928);
-const {syncDirectories, readBlockeraFiles} = __nccwpck_require__(6636);
+const { syncDirectories, readBlockeraFiles } = __nccwpck_require__(6636);
 
 /**
  * Main function to handle the GitHub Action workflow.
@@ -44934,99 +44934,113 @@ const {syncDirectories, readBlockeraFiles} = __nccwpck_require__(6636);
  * @returns {Promise<void>}
  */
 const run = async () => {
-    try {
-        // Set up Git configuration.
-        const git = simpleGit();
+	try {
+		// Set up Git configuration.
+		const git = simpleGit();
 
-        // Apply the user.name and user.email globally or within the repo.
-        await git.addConfig('user.name', 'blockerabot', undefined, {global: true});
-        await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com', undefined, {global: true});
+		// Apply the user.name and user.email globally or within the repo.
+		await git.addConfig('user.name', 'blockerabot', undefined, { global: true });
+		await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com', undefined, {
+			global: true
+		});
 
-        // Read blockera-pm.json files from current repository!
-        const {packagePaths, packageRepos} = await readBlockeraFiles();
-        info(`Package paths: ${packagePaths}`);
-        info(`Dependent repos: ${packageRepos}`);
+		// Read blockera-pm.json files from current repository!
+		const { packagePaths, packageRepos } = await readBlockeraFiles();
+		info(`Package paths: ${packagePaths}`);
+		info(`Dependent repos: ${packageRepos}`);
 
-        // Clone dependent repos and sync changes.
-        for (const repo of packageRepos) {
-            // Skip current repository!
-            if (repo === github.context.repo.repo) {
-                continue;
-            }
+		// Clone dependent repos and sync changes.
+		for (const repo of packageRepos) {
+			// Skip current repository!
+			if (repo === github.context.repo.repo) {
+				continue;
+			}
 
-            const repoDir = path.join('./', repo);
-            await git.clone(`https://x-access-token:${getInput('BLOCKERABOT_PAT')}@github.com/blockeraai/${repo}.git`, repoDir);
+			const repoDir = path.join('./', repo);
+			await git.clone(
+				`https://x-access-token:${getInput(
+					'BLOCKERABOT_PAT'
+				)}@github.com/blockeraai/${repo}.git`,
+				repoDir
+			);
 
-            // Set remote with access token for pushing.
-            await git.cwd(repoDir);
-            await git.remote([
-                'set-url',
-                'origin',
-                `https://x-access-token:${getInput('BLOCKERABOT_PAT')}@github.com/blockeraai/${repo}.git`
-            ]);
+			// Set remote with access token for pushing.
+			await git.cwd(repoDir);
+			await git.remote([
+				'set-url',
+				'origin',
+				`https://x-access-token:${getInput(
+					'BLOCKERABOT_PAT'
+				)}@github.com/blockeraai/${repo}.git`
+			]);
 
-            // Check if there is at least one commit.
-            const log = await git.log();
-            let diff;
+			// Check if there is at least one commit.
+			const log = await git.log();
+			let diff;
 
-            // Sync package directories.
-            for (const packagePath of packagePaths) {
-                if (log.total > 1) {
-                    // There are multiple commits, so HEAD^ can be used.
-                    diff = await git.diff(['--name-only', 'HEAD^', 'HEAD']);
-                } else if (log.total === 1) {
-                    // Only one commit exists, compare against an empty tree (i.e., first commit).
-                    diff = await git.diff(['--name-only', 'HEAD']);
-                } else {
-                    // No commits, skip diff.
-                    info('No commits in the repository.');
+			// Sync package directories.
+			for (const packagePath of packagePaths) {
+				if (log.total > 1) {
+					// There are multiple commits, so HEAD^ can be used.
+					diff = await git.diff(['--name-only', 'HEAD^', 'HEAD']);
+				} else if (log.total === 1) {
+					// Only one commit exists, compare against an empty tree (i.e., first commit).
+					diff = await git.diff(['--name-only', 'HEAD']);
+				} else {
+					// No commits, skip diff.
+					info('No commits in the repository.');
 
-                    continue;
-                }
+					continue;
+				}
 
-                console.log('Repository in progress: ' + repo);
+				console.log('Repository in progress: ' + repo);
 
-                const srcDir = path.join('./', packagePath);
-                const destDir = path.join(repoDir, 'packages');
+				const srcDir = path.join('./', packagePath);
+				const destDir = path.join(repoDir, 'packages');
 
-                // Syncing packages ...
-                await syncDirectories(srcDir, destDir);
-                info(`Synced package from ${srcDir} to ${destDir} of ${repo} repository ✅`);
-            }
+				// Syncing packages ...
+				await syncDirectories(srcDir, destDir);
+				info(`Synced package from ${srcDir} to ${destDir} of ${repo} repository ✅`);
+			}
 
-            // Apply the user.name and user.email globally or within the repo.
-            await git.addConfig('user.name', 'blockerabot', undefined, {global: true});
-            await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com', undefined, {global: true});
+			// Apply the user.name and user.email globally or within the repo.
+			await git.addConfig('user.name', 'blockerabot', undefined, { global: true });
+			await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com', undefined, {
+				global: true
+			});
 
-            // Create branch and commit changes.
-            await git.checkout(['-b', 'sync-packages-from-primary']);
-            await git.add('./*');
-            await git.commit('Sync shared packages from primary repo');
+			const branchName = `sync-packages-from-${repo}`;
 
-            // Push changes and create PR.
-            await git.push('origin', 'sync-packages-from-primary');
-            info(`Changes pushed to ${repo}`);
+			// Create branch and commit changes.
+			await git.checkout(['-b', branchName]);
+			await git.pull('origin', branchName);
+			await git.add('./*');
+			await git.commit(`Sync shared packages from primary ${repo}`);
 
-            // Use octokit to create a pull request.
-            const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
-            await octokit.rest.pulls.create({
-                owner: github.context.repo.owner,
-                repo: repo,
-                title: `Sync package from ${github.context.repo.repo} Repo`,
-                head: `sync-packages-from-${github.context.repo.repo}`,
-                base: 'master',
-                body: `This PR syncs the package from the (${github.context.repo.repo})[https://github.com/blockeraai/${github.context.repo.repo}] repository.`
-            });
-        }
-    } catch (error) {
-        setFailed(error.message);
-    }
+			// Push changes and create PR.
+			await git.push('origin', branchName);
+			info(`Changes pushed to ${repo}`);
+
+			// Use octokit to create a pull request.
+			const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
+			await octokit.rest.pulls.create({
+				owner: github.context.repo.owner,
+				repo: repo,
+				title: `Sync package from ${repo} Repo`,
+				head: `sync-packages-from-${repo}`,
+				base: 'master',
+				body: `This PR syncs the package from the (${repo})[https://github.com/blockeraai/${repo}] repository.`
+			});
+		}
+	} catch (error) {
+		setFailed(error.message);
+	}
 };
 
 const result = run();
 
 result.catch((error) => {
-    setFailed(error.message);
+	setFailed(error.message);
 });
 
 })();
