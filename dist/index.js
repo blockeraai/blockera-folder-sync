@@ -34985,140 +34985,6 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 7936:
-/***/ ((module, __webpack_exports__, __nccwpck_require__) => {
-
-"use strict";
-__nccwpck_require__.r(__webpack_exports__);
-/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   readBlockeraFiles: () => (/* binding */ readBlockeraFiles)
-/* harmony export */ });
-/* module decorator */ module = __nccwpck_require__.hmd(module);
-const core = __nccwpck_require__(7484);
-const github = __nccwpck_require__(3228);
-const simpleGit = __nccwpck_require__(9065);
-const fs = __nccwpck_require__(9896);
-const path = __nccwpck_require__(6928);
-const { glob } = __nccwpck_require__(1363);
-
-/**
- * Read and Parse blockera-pm.json files to detect paths and dependent repositories lists.
- *
- * @returns {{packageRepos: *[], packagePaths: *[]}} the object with "packagePaths" and "packageRepos" properties.
- */
-const readBlockeraFiles = async () => {
-	const files = [];
-	const packagePaths = [];
-	const packageRepos = [];
-
-	// Traverse through directories to find blockera-pm.json files.
-	const blockeraFiles = await glob('**/blockera-pm.json');
-
-	blockeraFiles.forEach((blockeraFile) => {
-		const filePath = blockeraFile;
-		const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-
-		if (data.path) packagePaths.push(data.path);
-		if (data.dependent && data.dependent.repositories)
-			packageRepos.push(...data.dependent.repositories);
-	});
-
-	return {
-		packagePaths,
-		packageRepos
-	};
-};
-
-/**
- * Main function to handle the GitHub Action workflow.
- *
- * @returns {Promise<void>}
- */
-const run = async () => {
-	try {
-		// Set up Git configuration.
-		const git = simpleGit();
-		await git.addConfig('user.name', 'blockerabot');
-		await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com');
-
-		// Read blockera-pm.json files.
-		const { packagePaths, packageRepos } = await readBlockeraFiles();
-		core.info(`Package paths: ${packagePaths}`);
-		core.info(`Dependent repos: ${packageRepos}`);
-
-		// Check for changes in packages.
-		const diff = await git.diff(['--name-only', 'HEAD^', 'HEAD']);
-		packagePaths.forEach((path) => {
-			if (diff.includes(path)) {
-				core.info(`Changes detected in package at ${path}`);
-			} else {
-				core.info(`No changes detected in ${path}`);
-			}
-		});
-
-		// Clone dependent repos and sync changes.
-		for (const repo of packageRepos) {
-			const repoDir = path.join('./', repo);
-			await git.clone(`https://github.com/blockeraai/${repo}.git`, repoDir);
-
-			// Set remote with access token for pushing.
-			await git.cwd(repoDir);
-			await git.remote([
-				'set-url',
-				'origin',
-				`https://x-access-token:${process.env.BLOCKERABOT_PAT}@github.com/blockeraai/${repo}.git`
-			]);
-
-			// Sync package directories.
-			for (const packagePath of packagePaths) {
-				if (repo !== github.context.repo.repo) {
-					const srcDir = path.join('./', packagePath);
-					const destDir = path.join(repoDir, packagePath);
-
-					await git.raw(['rsync', '-av', '--progress', srcDir, destDir, '--delete']);
-					core.info(`Synced package from ${srcDir} to ${destDir}`);
-				}
-			}
-
-			// Create branch and commit changes.
-			await git.checkout(['-b', 'sync-packages-from-primary']);
-			await git.add('./*');
-			await git.commit('Sync shared packages from primary repo');
-
-			// Push changes and create PR.
-			await git.push('origin', 'sync-packages-from-primary');
-			core.info(`Changes pushed to ${repo}`);
-
-			// Use octokit to create a pull request.
-			const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
-			await octokit.pulls.create({
-				owner: github.context.repo.owner,
-				repo: repo,
-				title: 'Sync package from Primary Repo',
-				head: 'sync-packages-from-primary',
-				base: 'master',
-				body: 'This PR syncs the package from the ' + process.env.REPOSITORY_NAME + ' repo.'
-			});
-		}
-	} catch (error) {
-		core.setFailed(error.message);
-	}
-};
-
-const result = run();
-
-result.catch((error) => {
-	core.setFailed(error.message);
-});
-
-module.exports = {
-	run,
-	readBlockeraFiles,
-};
-
-
-/***/ }),
-
 /***/ 2613:
 /***/ ((module) => {
 
@@ -44929,8 +44795,8 @@ exports.LRUCache = LRUCache;
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			id: moduleId,
-/******/ 			loaded: false,
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
@@ -44942,9 +44808,6 @@ exports.LRUCache = LRUCache;
 /******/ 		} finally {
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
 /******/ 		}
-/******/ 	
-/******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
 /******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
@@ -44960,21 +44823,6 @@ exports.LRUCache = LRUCache;
 /******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 				}
 /******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/harmony module decorator */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.hmd = (module) => {
-/******/ 			module = Object.create(module);
-/******/ 			if (!module.children) module.children = [];
-/******/ 			Object.defineProperty(module, 'exports', {
-/******/ 				enumerable: true,
-/******/ 				set: () => {
-/******/ 					throw new Error('ES Modules may not assign module.exports or exports.*, Use ESM export syntax, instead: ' + module.id);
-/******/ 				}
-/******/ 			});
-/******/ 			return module;
 /******/ 		};
 /******/ 	})();
 /******/ 	
@@ -44999,12 +44847,134 @@ exports.LRUCache = LRUCache;
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-/******/ 	
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(7936);
-/******/ 	module.exports = __webpack_exports__;
-/******/ 	
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+"use strict";
+__nccwpck_require__.r(__webpack_exports__);
+/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
+/* harmony export */   readBlockeraFiles: () => (/* binding */ readBlockeraFiles),
+/* harmony export */   run: () => (/* binding */ run)
+/* harmony export */ });
+const core = __nccwpck_require__(7484);
+const github = __nccwpck_require__(3228);
+const simpleGit = __nccwpck_require__(9065);
+const fs = __nccwpck_require__(9896);
+const path = __nccwpck_require__(6928);
+const { glob } = __nccwpck_require__(1363);
+
+/**
+ * Read and Parse blockera-pm.json files to detect paths and dependent repositories lists.
+ *
+ * @returns {{packageRepos: *[], packagePaths: *[]}} the object with "packagePaths" and "packageRepos" properties.
+ */
+const readBlockeraFiles = async () => {
+	const files = [];
+	const packagePaths = [];
+	const packageRepos = [];
+
+	// Traverse through directories to find blockera-pm.json files.
+	const blockeraFiles = await glob('**/blockera-pm.json');
+
+	blockeraFiles.forEach((blockeraFile) => {
+		const filePath = blockeraFile;
+		const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+
+		if (data.path) packagePaths.push(data.path);
+		if (data.dependent && data.dependent.repositories)
+			packageRepos.push(...data.dependent.repositories);
+	});
+
+	return {
+		packagePaths,
+		packageRepos
+	};
+};
+
+/**
+ * Main function to handle the GitHub Action workflow.
+ *
+ * @returns {Promise<void>}
+ */
+const run = async () => {
+	try {
+		// Set up Git configuration.
+		const git = simpleGit();
+		await git.addConfig('user.name', 'blockerabot');
+		await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com');
+
+		// Read blockera-pm.json files.
+		const { packagePaths, packageRepos } = await readBlockeraFiles();
+		core.info(`Package paths: ${packagePaths}`);
+		core.info(`Dependent repos: ${packageRepos}`);
+
+		// Check for changes in packages.
+		const diff = await git.diff(['--name-only', 'HEAD^', 'HEAD']);
+		packagePaths.forEach((path) => {
+			if (diff.includes(path)) {
+				core.info(`Changes detected in package at ${path}`);
+			} else {
+				core.info(`No changes detected in ${path}`);
+			}
+		});
+
+		// Clone dependent repos and sync changes.
+		for (const repo of packageRepos) {
+			const repoDir = path.join('./', repo);
+			await git.clone(`https://github.com/blockeraai/${repo}.git`, repoDir);
+
+			// Set remote with access token for pushing.
+			await git.cwd(repoDir);
+			await git.remote([
+				'set-url',
+				'origin',
+				`https://x-access-token:${process.env.BLOCKERABOT_PAT}@github.com/blockeraai/${repo}.git`
+			]);
+
+			// Sync package directories.
+			for (const packagePath of packagePaths) {
+				if (repo !== github.context.repo.repo) {
+					const srcDir = path.join('./', packagePath);
+					const destDir = path.join(repoDir, packagePath);
+
+					await git.raw(['rsync', '-av', '--progress', srcDir, destDir, '--delete']);
+					core.info(`Synced package from ${srcDir} to ${destDir}`);
+				}
+			}
+
+			// Create branch and commit changes.
+			await git.checkout(['-b', 'sync-packages-from-primary']);
+			await git.add('./*');
+			await git.commit('Sync shared packages from primary repo');
+
+			// Push changes and create PR.
+			await git.push('origin', 'sync-packages-from-primary');
+			core.info(`Changes pushed to ${repo}`);
+
+			// Use octokit to create a pull request.
+			const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+			await octokit.pulls.create({
+				owner: github.context.repo.owner,
+				repo: repo,
+				title: 'Sync package from Primary Repo',
+				head: 'sync-packages-from-primary',
+				base: 'master',
+				body: 'This PR syncs the package from the ' + process.env.REPOSITORY_NAME + ' repo.'
+			});
+		}
+	} catch (error) {
+		core.setFailed(error.message);
+	}
+};
+
+const result = run();
+
+result.catch((error) => {
+	core.setFailed(error.message);
+});
+
+})();
+
+module.exports = __webpack_exports__;
 /******/ })()
 ;
