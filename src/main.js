@@ -38,7 +38,7 @@ export const readBlockeraFiles = async () => {
  *
  * @returns {Promise<void>}
  */
-const run = async () => {
+export const run = async () => {
 	try {
 		// Set up Git configuration.
 		const git = simpleGit();
@@ -114,8 +114,3 @@ const result = run();
 result.catch((error) => {
 	core.setFailed(error.message);
 });
-
-module.exports = {
-	run,
-	readBlockeraFiles,
-};
