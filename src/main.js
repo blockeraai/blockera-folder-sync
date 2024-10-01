@@ -45,13 +45,28 @@ export const run = async () => {
 		await git.addConfig('user.name', 'blockerabot');
 		await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com');
 
+		// Check if there is at least one commit.
+		const log = await git.log();
+		let diff;
+
+		if (log.total > 1) {
+			// There are multiple commits, so HEAD^ can be used.
+			diff = await git.diff(['--name-only', 'HEAD^', 'HEAD']);
+		} else if (log.total === 1) {
+			// Only one commit exists, compare against an empty tree (i.e., first commit).
+			diff = await git.diff(['--name-only', 'HEAD']);
+		} else {
+			// No commits, skip diff.
+			core.info('No commits in the repository.');
+			return;
+		}
+
 		// Read blockera-pm.json files.
 		const { packagePaths, packageRepos } = await readBlockeraFiles();
 		core.info(`Package paths: ${packagePaths}`);
 		core.info(`Dependent repos: ${packageRepos}`);
 
 		// Check for changes in packages.
-		const diff = await git.diff(['--name-only', 'HEAD^', 'HEAD']);
 		packagePaths.forEach((path) => {
 			if (diff.includes(path)) {
 				core.info(`Changes detected in package at ${path}`);
