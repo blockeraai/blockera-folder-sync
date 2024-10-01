@@ -57,9 +57,9 @@ export const run = async () => {
             // Sync package directories.
             for (const packagePath of packagePaths) {
                 if (diff.includes(packagePath)) {
-                    info(`Changes detected in package at ${path}`);
+                    info(`Changes detected in package at ${packagePath}`);
                 } else {
-                    info(`No changes detected in ${path}`);
+                    info(`No changes detected in ${packagePath}`);
 
                     continue;
                 }
@@ -86,16 +86,13 @@ export const run = async () => {
             await git.add('./*');
             await git.commit('Sync shared packages from primary repo');
 
-            console.log(await git.status());
-
             // Push changes and create PR.
             await git.push('origin', 'sync-packages-from-primary');
             info(`Changes pushed to ${repo}`);
 
             // Use octokit to create a pull request.
             const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
-            console.log(octokit)
-            await octokit.pulls.create({
+            await octokit.rest.pulls.create({
                 owner: github.context.repo.owner,
                 repo: repo,
                 title: 'Sync package from Primary Repo',
