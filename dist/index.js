@@ -34985,6 +34985,72 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 6636:
+/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
+
+"use strict";
+__nccwpck_require__.r(__webpack_exports__);
+/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
+/* harmony export */   readBlockeraFiles: () => (/* binding */ readBlockeraFiles),
+/* harmony export */   syncDirectories: () => (/* binding */ syncDirectories)
+/* harmony export */ });
+const fs = __nccwpck_require__(9896);
+const {glob} = __nccwpck_require__(1363);
+
+/**
+ * Read and Parse blockera-pm.json files to detect paths and dependent repositories lists.
+ *
+ * @returns {{packageRepos: *[], packagePaths: *[]}} the object with "packagePaths" and "packageRepos" properties.
+ */
+const readBlockeraFiles = async () => {
+    const packagePaths = [];
+    const packageRepos = [];
+
+    // Traverse through directories to find blockera-pm.json files.
+    const blockeraFiles = await glob('**/blockera-pm.json');
+
+    blockeraFiles.forEach((blockeraFile) => {
+        const data = JSON.parse(fs.readFileSync(blockeraFile, 'utf8'));
+
+        if (data.path) {
+            packagePaths.push(data.path);
+        }
+
+        if (data.dependent && data.dependent.repositories) {
+            packageRepos.push(...data.dependent.repositories);
+        }
+    });
+
+    return {
+        packagePaths,
+        packageRepos: [...new Set(packageRepos)],
+    };
+};
+
+/**
+ * Sync package directories using rsync.
+ *
+ * @param {string} srcDir - Source directory to sync.
+ * @param {string} destDir - Destination directory to sync to.
+ * @returns {Promise<void>}
+ */
+const syncDirectories = (srcDir, destDir) => {
+    return new Promise((resolve, reject) => {
+        const rsyncCommand = `rsync -av --progress ${srcDir} ${destDir} --delete`;
+        exec(rsyncCommand, (error, stdout, stderr) => {
+            if (error) {
+                reject(`Error syncing directories: ${stderr}`);
+            } else {
+                console.log(`rsync output: ${stdout}`);
+                resolve();
+            }
+        });
+    });
+};
+
+
+/***/ }),
+
 /***/ 2613:
 /***/ ((module) => {
 
@@ -44853,64 +44919,14 @@ var __webpack_exports__ = {};
 "use strict";
 __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   readBlockeraFiles: () => (/* binding */ readBlockeraFiles),
 /* harmony export */   run: () => (/* binding */ run)
 /* harmony export */ });
 const {info, setFailed, getInput} = __nccwpck_require__(7484);
 const github = __nccwpck_require__(3228);
 const simpleGit = __nccwpck_require__(9065);
-const fs = __nccwpck_require__(9896);
 const path = __nccwpck_require__(6928);
-const {glob} = __nccwpck_require__(1363);
-const {exec} = __nccwpck_require__(5317);
-
-/**
- * Read and Parse blockera-pm.json files to detect paths and dependent repositories lists.
- *
- * @returns {{packageRepos: *[], packagePaths: *[]}} the object with "packagePaths" and "packageRepos" properties.
- */
-const readBlockeraFiles = async () => {
-    const files = [];
-    const packagePaths = [];
-    const packageRepos = [];
-
-    // Traverse through directories to find blockera-pm.json files.
-    const blockeraFiles = await glob('**/blockera-pm.json');
-
-    blockeraFiles.forEach((blockeraFile) => {
-        const data = JSON.parse(fs.readFileSync(blockeraFile, 'utf8'));
-
-        if (data.path) packagePaths.push(data.path);
-        if (data.dependent && data.dependent.repositories)
-            packageRepos.push(...data.dependent.repositories);
-    });
-
-    return {
-        packagePaths,
-        packageRepos
-    };
-};
-
-/**
- * Sync package directories using rsync.
- *
- * @param {string} srcDir - Source directory to sync.
- * @param {string} destDir - Destination directory to sync to.
- * @returns {Promise<void>}
- */
-const syncDirectories = (srcDir, destDir) => {
-    return new Promise((resolve, reject) => {
-        const rsyncCommand = `rsync -av --progress ${srcDir} ${destDir} --delete`;
-        exec(rsyncCommand, (error, stdout, stderr) => {
-            if (error) {
-                reject(`Error syncing directories: ${stderr}`);
-            } else {
-                console.log(`rsync output: ${stdout}`);
-                resolve();
-            }
-        });
-    });
-};
+const {exec: main_exec} = __nccwpck_require__(5317);
+const {syncDirectories, readBlockeraFiles} = __nccwpck_require__(6636);
 
 /**
  * Main function to handle the GitHub Action workflow.
@@ -44926,35 +44942,10 @@ const run = async () => {
         await git.addConfig('user.name', 'blockerabot', undefined, {global: true});
         await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com', undefined, {global: true});
 
-        // Read blockera-pm.json files.
+        // Read blockera-pm.json files from current repository!
         const {packagePaths, packageRepos} = await readBlockeraFiles();
         info(`Package paths: ${packagePaths}`);
         info(`Dependent repos: ${packageRepos}`);
-
-        // Check if there is at least one commit.
-        const log = await git.log();
-        let diff;
-
-        if (log.total > 1) {
-            // There are multiple commits, so HEAD^ can be used.
-            diff = await git.diff(['--name-only', 'HEAD^', 'HEAD']);
-        } else if (log.total === 1) {
-            // Only one commit exists, compare against an empty tree (i.e., first commit).
-            diff = await git.diff(['--name-only', 'HEAD']);
-        } else {
-            // No commits, skip diff.
-            info('No commits in the repository.');
-            return;
-        }
-
-        // Check for changes in packages.
-        packagePaths.forEach((path) => {
-            if (diff.includes(path)) {
-                info(`Changes detected in package at ${path}`);
-            } else {
-                info(`No changes detected in ${path}`);
-            }
-        });
 
         // Clone dependent repos and sync changes.
         for (const repo of packageRepos) {
@@ -44969,15 +44960,44 @@ const run = async () => {
                 `https://x-access-token:${getInput('BLOCKERABOT_PAT')}@github.com/blockeraai/${repo}.git`
             ]);
 
+            // Check if there is at least one commit.
+            const log = await git.log();
+            let diff;
+
+            if (log.total > 1) {
+                // There are multiple commits, so HEAD^ can be used.
+                diff = await git.diff(['--name-only', 'HEAD^', 'HEAD']);
+            } else if (log.total === 1) {
+                // Only one commit exists, compare against an empty tree (i.e., first commit).
+                diff = await git.diff(['--name-only', 'HEAD']);
+            } else {
+                // No commits, skip diff.
+                info('No commits in the repository.');
+
+                continue;
+            }
+
             // Sync package directories.
             for (const packagePath of packagePaths) {
-                if (repo !== github.context.repo.repo) {
-                    const srcDir = path.join('./', packagePath);
-                    const destDir = path.join(repoDir, packagePath);
+                if (diff.includes(packagePath)) {
+                    info(`Changes detected in package at ${path}`);
+                } else {
+                    info(`No changes detected in ${path}`);
 
-                    await syncDirectories(srcDir, destDir);
-                    info(`Synced package from ${srcDir} to ${destDir}`);
+                    continue;
                 }
+
+                // Skip current repository!
+                if (repo === github.context.repo.repo) {
+                    continue;
+                }
+
+                const srcDir = path.join('./', packagePath);
+                const destDir = path.join(repoDir, packagePath);
+
+                // Syncing packages ...
+                await syncDirectories(srcDir, destDir);
+                info(`Synced package from ${srcDir} to ${destDir}`);
             }
 
             // Apply the user.name and user.email globally or within the repo.
@@ -44988,6 +45008,8 @@ const run = async () => {
             await git.checkout(['-b', 'sync-packages-from-primary']);
             await git.add('./*');
             await git.commit('Sync shared packages from primary repo');
+
+            console.log(await git.status());
 
             // Push changes and create PR.
             await git.push('origin', 'sync-packages-from-primary');

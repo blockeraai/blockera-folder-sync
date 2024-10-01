@@ -11,6 +11,7 @@ jest.mock('@actions/core');
 jest.mock('@actions/github');
 
 const action = require('../src/main');
+const helpers = require('../src/helpers');
 
 describe('Sync Packages Action', () => {
     afterEach(() => {
@@ -37,7 +38,7 @@ describe('Sync Packages Action', () => {
         const mockReaddirSync = jest.spyOn(fs, 'readdirSync').mockReturnValue(['blockera-pm.json']);
         const mockReadFileSync = jest.spyOn(fs, 'readFileSync').mockReturnValue(blockeraJson);
 
-        action.readBlockeraFiles().then(({packagePaths, packageRepos}) => {
+        helpers.readBlockeraFiles().then(({packagePaths, packageRepos}) => {
             expect(packagePaths).toEqual(['path/to/package']);
             expect(packageRepos).toEqual(['repo1', 'repo2']);
             expect(mockReaddirSync).toHaveBeenCalled();
@@ -49,7 +50,7 @@ describe('Sync Packages Action', () => {
         const git = simpleGit();
         git.diff.mockResolvedValue('path/to/package/file.js');
 
-        action.readBlockeraFiles().then(()=> {
+        helpers.readBlockeraFiles().then(()=> {
             action.run().then(() => {
                 expect(git.diff).toHaveBeenCalledWith(['--name-only', 'HEAD^', 'HEAD']);
                 expect(core.info).toHaveBeenCalledWith('Changes detected in package at path/to/package');
