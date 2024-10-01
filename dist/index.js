@@ -44931,15 +44931,6 @@ const run = async () => {
         core.info(`Package paths: ${packagePaths}`);
         core.info(`Dependent repos: ${packageRepos}`);
 
-        // Check for changes in packages.
-        packagePaths.forEach((path) => {
-            if (diff.includes(path)) {
-                core.info(`Changes detected in package at ${path}`);
-            } else {
-                core.info(`No changes detected in ${path}`);
-            }
-        });
-
         // Check if there is at least one commit.
         const log = await git.log();
         let diff;
@@ -44955,6 +44946,15 @@ const run = async () => {
             core.info('No commits in the repository.');
             return;
         }
+
+        // Check for changes in packages.
+        packagePaths.forEach((path) => {
+            if (diff.includes(path)) {
+                core.info(`Changes detected in package at ${path}`);
+            } else {
+                core.info(`No changes detected in ${path}`);
+            }
+        });
 
         // Clone dependent repos and sync changes.
         for (const repo of packageRepos) {
