@@ -45014,7 +45014,7 @@ const run = async () => {
 			// Create branch and commit changes.
 			await git.checkout(['-b', branchName]);
 			await git.add('./*');
-			await git.commit(`Sync shared packages from primary ${repo}`);
+			await git.commit(`Sync shared packages from ${github.context.repo.repo}`);
 
 			// Push changes and create PR.
 			await git.push('origin', branchName);
@@ -45028,7 +45028,7 @@ const run = async () => {
 				title: `Sync package from ${github.context.repo.repo} Repo`,
 				head: `sync-packages-from-${github.context.repo.repo}`,
 				base: 'master',
-				body: `This PR syncs the package from the [${github.context.repo.repo}](https://github.com/blockeraai/${repo}) repository.`
+				body: `This PR syncs the package from the [${github.context.repo.repo}](https://github.com/blockeraai/${github.context.repo.repo}) repository.`
 			});
 		}
 	} catch (error) {
