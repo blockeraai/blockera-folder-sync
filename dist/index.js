@@ -34996,6 +34996,7 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */ });
 const fs = __nccwpck_require__(9896);
 const {glob} = __nccwpck_require__(1363);
+const {exec} = __nccwpck_require__(5317);
 
 /**
  * Read and Parse blockera-pm.json files to detect paths and dependent repositories lists.
@@ -44925,7 +44926,6 @@ const {info, setFailed, getInput} = __nccwpck_require__(7484);
 const github = __nccwpck_require__(3228);
 const simpleGit = __nccwpck_require__(9065);
 const path = __nccwpck_require__(6928);
-const {exec: main_exec} = __nccwpck_require__(5317);
 const {syncDirectories, readBlockeraFiles} = __nccwpck_require__(6636);
 
 /**
