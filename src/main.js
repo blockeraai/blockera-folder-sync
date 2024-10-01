@@ -4,6 +4,7 @@ const simpleGit = require('simple-git');
 const fs = require('fs');
 const path = require('path');
 const { glob } = require('glob');
+const { exec } = require('child_process');
 
 /**
  * Read and Parse blockera-pm.json files to detect paths and dependent repositories lists.
@@ -19,8 +20,7 @@ export const readBlockeraFiles = async () => {
 	const blockeraFiles = await glob('**/blockera-pm.json');
 
 	blockeraFiles.forEach((blockeraFile) => {
-		const filePath = blockeraFile;
-		const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+		const data = JSON.parse(fs.readFileSync(blockeraFile, 'utf8'));
 
 		if (data.path) packagePaths.push(data.path);
 		if (data.dependent && data.dependent.repositories)
@@ -31,6 +31,27 @@ export const readBlockeraFiles = async () => {
 		packagePaths,
 		packageRepos
 	};
+};
+
+/**
+ * Sync package directories using rsync.
+ *
+ * @param {string} srcDir - Source directory to sync.
+ * @param {string} destDir - Destination directory to sync to.
+ * @returns {Promise<void>}
+ */
+const syncDirectories = (srcDir, destDir) => {
+	return new Promise((resolve, reject) => {
+		const rsyncCommand = `rsync -av --progress ${srcDir} ${destDir} --delete`;
+		exec(rsyncCommand, (error, stdout, stderr) => {
+			if (error) {
+				reject(`Error syncing directories: ${stderr}`);
+			} else {
+				console.log(`rsync output: ${stdout}`);
+				resolve();
+			}
+		});
+	});
 };
 
 /**
@@ -94,7 +115,7 @@ export const run = async () => {
 					const srcDir = path.join('./', packagePath);
 					const destDir = path.join(repoDir, packagePath);
 
-					await git.raw(['rsync', '-av', '--progress', srcDir, destDir, '--delete']);
+					await syncDirectories(srcDir, destDir);
 					core.info(`Synced package from ${srcDir} to ${destDir}`);
 				}
 			}
