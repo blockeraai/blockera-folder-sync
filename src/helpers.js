@@ -1,5 +1,6 @@
 const fs = require('fs');
 const {glob} = require('glob');
+const {exec} = require('child_process');
 
 /**
  * Read and Parse blockera-pm.json files to detect paths and dependent repositories lists.

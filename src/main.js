@@ -2,7 +2,6 @@ const {info, setFailed, getInput} = require('@actions/core');
 const github = require('@actions/github');
 const simpleGit = require('simple-git');
 const path = require('path');
-const {exec} = require('child_process');
 const {syncDirectories, readBlockeraFiles} = require('./helpers');
 
 /**
