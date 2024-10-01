@@ -44987,7 +44987,7 @@ const run = async () => {
                 console.log('Repository in progress: ' + repo);
 
                 const srcDir = path.join('./', packagePath);
-                const destDir = path.join(repoDir, packagePath);
+                const destDir = path.join(repoDir, 'packages');
 
                 // Syncing packages ...
                 await syncDirectories(srcDir, destDir);
