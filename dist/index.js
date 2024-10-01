@@ -44994,7 +44994,8 @@ const run = async () => {
             info(`Changes pushed to ${repo}`);
 
             // Use octokit to create a pull request.
-            const octokit = github.getOctokit(getInput('GITHUB_TOKEN'));
+            const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
+            console.log(octokit)
             await octokit.pulls.create({
                 owner: github.context.repo.owner,
                 repo: repo,
