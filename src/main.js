@@ -25,6 +25,11 @@ export const run = async () => {
 
         // Clone dependent repos and sync changes.
         for (const repo of packageRepos) {
+            // Skip current repository!
+            if (repo === github.context.repo.repo) {
+                continue;
+            }
+
             const repoDir = path.join('./', repo);
             await git.clone(`https://x-access-token:${getInput('BLOCKERABOT_PAT')}@github.com/blockeraai/${repo}.git`, repoDir);
 
@@ -55,19 +60,14 @@ export const run = async () => {
                     continue;
                 }
 
-                console.log('Repository in progress: ' + github.context.repo.repo + ' ...');
-
-                // Skip current repository!
-                if (repo === github.context.repo.repo) {
-                    continue;
-                }
+                console.log('Repository in progress: ' + repo);
 
                 const srcDir = path.join('./', packagePath);
                 const destDir = path.join(repoDir, packagePath);
 
                 // Syncing packages ...
-                await syncDirectories(srcDir, destDir);
-                info(`Synced package from ${srcDir} to ${destDir}`);
+                await syncDirectories(srcDir, srcDir);
+                info(`Synced package from ${srcDir} to ${destDir} of ${repo} repository ✅`);
             }
 
             // Apply the user.name and user.email globally or within the repo.
@@ -88,10 +88,10 @@ export const run = async () => {
             await octokit.rest.pulls.create({
                 owner: github.context.repo.owner,
                 repo: repo,
-                title: 'Sync package from Primary Repo',
-                head: 'sync-packages-from-primary',
+                title: `Sync package from ${github.context.repo.repo} Repo`,
+                head: `sync-packages-from-${github.context.repo.repo}`,
                 base: 'master',
-                body: 'This PR syncs the package from the ' + getInput('REPOSITORY_NAME') + ' repo.'
+                body: `This PR syncs the package from the (${github.context.repo.repo})[https://github.com/blockeraai/${github.context.repo.repo}] repository.`
             });
         }
     } catch (error) {
