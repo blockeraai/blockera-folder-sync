@@ -11,10 +11,9 @@ jest.mock('@actions/core');
 jest.mock('@actions/github');
 
 const action = require('../src/main');
-const helpers = require('../src/helpers');
 
 describe('Sync Packages Action', () => {
-    beforeEach(() => {
+    afterEach(() => {
         jest.clearAllMocks(); // Clear mocks before each test.
     });
 
@@ -36,23 +35,24 @@ describe('Sync Packages Action', () => {
         const mockReaddirSync = jest.spyOn(fs, 'readdirSync').mockReturnValue(['blockera-pm.json']);
         const mockReadFileSync = jest.spyOn(fs, 'readFileSync').mockReturnValue(blockeraJson);
 
-        const {packagePaths, packageRepos} = helpers.readBlockeraFiles();
-
-        expect(packagePaths).toEqual(['path/to/package']);
-        expect(packageRepos).toEqual(['repo1', 'repo2']);
-        expect(mockReaddirSync).toHaveBeenCalled();
-        expect(mockReadFileSync).toHaveBeenCalled();
+        action.readBlockeraFiles().then(({packagePaths, packageRepos}) => {
+            expect(packagePaths).toEqual(['path/to/package']);
+            expect(packageRepos).toEqual(['repo1', 'repo2']);
+            expect(mockReaddirSync).toHaveBeenCalled();
+            expect(mockReadFileSync).toHaveBeenCalled();
+        });
     });
 
     test('should detect changes in packages', () => {
         const git = simpleGit();
         git.diff.mockResolvedValue('path/to/package/file.js');
 
-        helpers.readBlockeraFiles();
-        action.run().then(() => {
-            expect(git.diff).toHaveBeenCalledWith(['--name-only', 'HEAD^', 'HEAD']);
-            expect(core.info).toHaveBeenCalledWith('Changes detected in package at path/to/package');
-            expect(jest.spyOn(fs, 'readFileSync').mockReturnValue()).toHaveBeenCalled();
+        action.readBlockeraFiles().then(()=> {
+            action.run().then(() => {
+                expect(git.diff).toHaveBeenCalledWith(['--name-only', 'HEAD^', 'HEAD']);
+                expect(core.info).toHaveBeenCalledWith('Changes detected in package at path/to/package');
+                expect(jest.spyOn(fs, 'readFileSync').mockReturnValue()).toHaveBeenCalled();
+            });
         });
     });
 

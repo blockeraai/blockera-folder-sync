@@ -10,7 +10,7 @@ const { glob } = require('glob');
  *
  * @returns {{packageRepos: *[], packagePaths: *[]}} the object with "packagePaths" and "packageRepos" properties.
  */
-const readBlockeraFiles = async () => {
+export const readBlockeraFiles = async () => {
 	const files = [];
 	const packagePaths = [];
 	const packageRepos = [];
@@ -116,5 +116,6 @@ result.catch((error) => {
 });
 
 module.exports = {
-	run
+	run,
+	readBlockeraFiles,
 };
