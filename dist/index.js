@@ -44964,25 +44964,17 @@ const run = async () => {
             const log = await git.log();
             let diff;
 
-            if (log.total > 1) {
-                // There are multiple commits, so HEAD^ can be used.
-                diff = await git.diff(['--name-only', 'HEAD^', 'HEAD']);
-            } else if (log.total === 1) {
-                // Only one commit exists, compare against an empty tree (i.e., first commit).
-                diff = await git.diff(['--name-only', 'HEAD']);
-            } else {
-                // No commits, skip diff.
-                info('No commits in the repository.');
-
-                continue;
-            }
-
             // Sync package directories.
             for (const packagePath of packagePaths) {
-                if (diff.includes(packagePath)) {
-                    info(`Changes detected in package at ${packagePath}`);
+                if (log.total > 1) {
+                    // There are multiple commits, so HEAD^ can be used.
+                    diff = await git.diff(['--name-only', 'HEAD^', 'HEAD']);
+                } else if (log.total === 1) {
+                    // Only one commit exists, compare against an empty tree (i.e., first commit).
+                    diff = await git.diff(['--name-only', 'HEAD']);
                 } else {
-                    info(`No changes detected in ${packagePath}`);
+                    // No commits, skip diff.
+                    info('No commits in the repository.');
 
                     continue;
                 }
