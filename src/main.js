@@ -85,11 +85,10 @@ export const run = async () => {
 				global: true
 			});
 
-			const branchName = `sync-packages-from-${repo}`;
+			const branchName = `sync-packages-from-${github.context.repo.repo}`;
 
 			// Create branch and commit changes.
 			await git.checkout(['-b', branchName]);
-			await git.pull('origin', branchName);
 			await git.add('./*');
 			await git.commit(`Sync shared packages from primary ${repo}`);
 
