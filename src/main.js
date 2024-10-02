@@ -110,6 +110,11 @@ export const run = async () => {
 	} catch (error) {
 		console.log('Error log for Run:', error);
 
+		// No commits between master and sync-packages-from-${branchName}
+		if (422 === error.status) {
+			return;
+		}
+
 		setFailed(error.message);
 	}
 };
@@ -118,6 +123,11 @@ const result = run();
 
 result.catch((error) => {
 	console.log('Error log for Results:', error);
+
+	// No commits between master and sync-packages-from-${branchName}.
+	if (422 === error.status) {
+		return;
+	}
 
 	setFailed(error.message);
 });
