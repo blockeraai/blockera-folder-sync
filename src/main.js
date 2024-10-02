@@ -108,6 +108,8 @@ export const run = async () => {
 			});
 		}
 	} catch (error) {
+		console.log('Error log for Run: ' + error.message);
+
 		setFailed(error.message);
 	}
 };
@@ -115,5 +117,7 @@ export const run = async () => {
 const result = run();
 
 result.catch((error) => {
+	console.log('Error log for Results: ' + error.message);
+
 	setFailed(error.message);
 });
