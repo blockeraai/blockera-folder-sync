@@ -20,7 +20,7 @@ export const run = async () => {
 			global: true
 		});
 
-		// Read blockera-pm.json files from current repository!
+		// Read blockera-folder-sync.json files from current repository!
 		const { packagePaths, packageRepos } = await readBlockeraFiles();
 		info(`Package paths: ${packagePaths}`);
 		info(`Dependent repos: ${packageRepos}`);

@@ -1,35 +1,35 @@
 const fs = require('fs');
-const {glob} = require('glob');
-const {exec} = require('child_process');
+const { glob } = require('glob');
+const { exec } = require('child_process');
 
 /**
- * Read and Parse blockera-pm.json files to detect paths and dependent repositories lists.
+ * Read and Parse blockera-folder-sync.json files to detect paths and dependent repositories lists.
  *
  * @returns {{packageRepos: *[], packagePaths: *[]}} the object with "packagePaths" and "packageRepos" properties.
  */
 export const readBlockeraFiles = async () => {
-    const packagePaths = [];
-    const packageRepos = [];
+	const packagePaths = [];
+	const packageRepos = [];
 
-    // Traverse through directories to find blockera-pm.json files.
-    const blockeraFiles = await glob('**/blockera-pm.json');
+	// Traverse through directories to find blockera-folder-sync.json files.
+	const blockeraFiles = await glob('**/blockera-folder-sync.json');
 
-    blockeraFiles.forEach((blockeraFile) => {
-        const data = JSON.parse(fs.readFileSync(blockeraFile, 'utf8'));
+	blockeraFiles.forEach((blockeraFile) => {
+		const data = JSON.parse(fs.readFileSync(blockeraFile, 'utf8'));
 
-        if (data.path) {
-            packagePaths.push(data.path);
-        }
+		if (data.path) {
+			packagePaths.push(data.path);
+		}
 
-        if (data.dependent && data.dependent.repositories) {
-            packageRepos.push(...data.dependent.repositories);
-        }
-    });
+		if (data.dependent && data.dependent.repositories) {
+			packageRepos.push(...data.dependent.repositories);
+		}
+	});
 
-    return {
-        packagePaths,
-        packageRepos: [...new Set(packageRepos)],
-    };
+	return {
+		packagePaths,
+		packageRepos: [...new Set(packageRepos)]
+	};
 };
 
 /**
@@ -40,15 +40,15 @@ export const readBlockeraFiles = async () => {
  * @returns {Promise<void>}
  */
 export const syncDirectories = (srcDir, destDir) => {
-    return new Promise((resolve, reject) => {
-        const rsyncCommand = `rsync -av --progress ${srcDir} ${destDir} --delete`;
-        exec(rsyncCommand, (error, stdout, stderr) => {
-            if (error) {
-                reject(`Error syncing directories: ${stderr}`);
-            } else {
-                console.log(`rsync output: ${stdout}`);
-                resolve();
-            }
-        });
-    });
+	return new Promise((resolve, reject) => {
+		const rsyncCommand = `rsync -av --progress ${srcDir} ${destDir} --delete`;
+		exec(rsyncCommand, (error, stdout, stderr) => {
+			if (error) {
+				reject(`Error syncing directories: ${stderr}`);
+			} else {
+				console.log(`rsync output: ${stdout}`);
+				resolve();
+			}
+		});
+	});
 };
