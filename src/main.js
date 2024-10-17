@@ -39,7 +39,7 @@ export const run = async () => {
                 continue;
             }
 
-            const repoIdMatches = repo.exec(/\/\*\.git/gi);
+            const repoIdMatches = /\/\*\.git/gi.exec(repo);
 
             if(!repoIdMatches || !repoIdMatches[0]){
                 continue;
