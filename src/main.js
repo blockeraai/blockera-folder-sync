@@ -1,8 +1,8 @@
-const { info, setFailed, getInput } = require('@actions/core');
+const {info, setFailed, getInput} = require('@actions/core');
 const github = require('@actions/github');
 const simpleGit = require('simple-git');
 const path = require('path');
-const { syncDirectories, readBlockeraFiles } = require('./helpers');
+const {syncDirectories, readBlockeraFiles} = require('./helpers');
 
 /**
  * Main function to handle the GitHub Action workflow.
@@ -10,124 +10,124 @@ const { syncDirectories, readBlockeraFiles } = require('./helpers');
  * @returns {Promise<void>}
  */
 export const run = async () => {
-	try {
-		// Set up Git configuration.
-		const git = simpleGit();
+    try {
+        // Set up Git configuration.
+        const git = simpleGit();
 
-		// Apply the user.name and user.email globally or within the repo.
-		await git.addConfig('user.name', 'blockerabot', undefined, { global: true });
-		await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com', undefined, {
-			global: true
-		});
+        // Apply the user.name and user.email globally or within the repo.
+        await git.addConfig('user.name', 'blockerabot', undefined, {global: true});
+        await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com', undefined, {
+            global: true
+        });
 
-		// Read blockera-folder-sync.json files from current repository!
-		const { packagePaths, packageRepos } = await readBlockeraFiles();
-		info(`Package paths: ${packagePaths}`);
-		info(`Dependent repos: ${packageRepos}`);
+        // Read blockera-folder-sync.json files from current repository!
+        const packages = await readBlockeraFiles();
+        info(`Package paths: ${packages}`);
 
-		// Clone dependent repos and sync changes.
-		for (const repo of packageRepos) {
-			// Skip current repository!
-			if (repo === github.context.repo.repo) {
-				continue;
-			}
+        // Clone dependent repos and sync changes.
+        for (const repo in packages) {
+            const packagePaths = packages[repo];
 
-			const repoDir = path.join('./', repo);
-			await git.clone(
-				`https://x-access-token:${getInput(
-					'BLOCKERABOT_PAT'
-				)}@github.com/blockeraai/${repo}.git`,
-				repoDir
-			);
+            // Skip current repository!
+            if (repo === github.context.repo.repo) {
+                continue;
+            }
 
-			// Set remote with access token for pushing.
-			await git.cwd(repoDir);
-			await git.remote([
-				'set-url',
-				'origin',
-				`https://x-access-token:${getInput(
-					'BLOCKERABOT_PAT'
-				)}@github.com/blockeraai/${repo}.git`
-			]);
+            const repoDir = path.join('./', repo);
+            const repositoryURL = repo.replace(/http(?:s|):\/\//gi, '');
+            const repoPath = `https://x-access-token:${getInput(
+                'BLOCKERABOT_PAT'
+            )}@${repositoryURL}`;
 
-			// Check if there is at least one commit.
-			const log = await git.log();
-			let diff;
+            // Try to clone of repository ...
+            await git.clone(repoPath, repoDir);
 
-			// Sync package directories.
-			for (const packagePath of packagePaths) {
-				if (log.total > 1) {
-					// There are multiple commits, so HEAD^ can be used.
-					diff = await git.diff(['--name-only', 'HEAD^', 'HEAD']);
-				} else if (log.total === 1) {
-					// Only one commit exists, compare against an empty tree (i.e., first commit).
-					diff = await git.diff(['--name-only', 'HEAD']);
-				} else {
-					// No commits, skip diff.
-					info('No commits in the repository.');
+            // Set remote with access token for pushing.
+            await git.cwd(repoDir);
+            await git.remote([
+                'set-url',
+                'origin',
+                repoPath
+            ]);
 
-					continue;
-				}
+            // Check if there is at least one commit.
+            const log = await git.log();
+            let diff;
 
-				console.log('Repository in progress: ' + repo);
+            // Sync package directories.
+            for (const packagePath of packagePaths) {
+                if (log.total > 1) {
+                    // There are multiple commits, so HEAD^ can be used.
+                    diff = await git.diff(['--name-only', 'HEAD^', 'HEAD']);
+                } else if (log.total === 1) {
+                    // Only one commit exists, compare against an empty tree (i.e., first commit).
+                    diff = await git.diff(['--name-only', 'HEAD']);
+                } else {
+                    // No commits, skip diff.
+                    info('No commits in the repository.');
 
-				const srcDir = path.join('./', packagePath);
-				const destDir = path.join(repoDir, 'packages');
+                    continue;
+                }
 
-				// Syncing packages ...
-				await syncDirectories(srcDir, destDir);
-				info(`Synced package from ${srcDir} to ${destDir} of ${repo} repository ✅`);
-			}
+                console.log('Repository in progress: ' + repo);
 
-			// Apply the user.name and user.email globally or within the repo.
-			await git.addConfig('user.name', 'blockerabot', undefined, { global: true });
-			await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com', undefined, {
-				global: true
-			});
+                const srcDir = path.join('./', packagePath);
+                const destDir = path.join(repoDir, 'packages');
 
-			const branchName = `sync-packages-from-${github.context.repo.repo}`;
+                // Syncing packages ...
+                await syncDirectories(srcDir, destDir);
+                info(`Synced package from ${srcDir} to ${destDir} of ${repo} repository ✅`);
+            }
 
-			// Create branch and commit changes.
-			await git.checkout(['-b', branchName]);
-			await git.add('./*');
-			await git.commit(`Sync shared packages from ${github.context.repo.repo}`);
+            // Apply the user.name and user.email globally or within the repo.
+            await git.addConfig('user.name', 'blockerabot', undefined, {global: true});
+            await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com', undefined, {
+                global: true
+            });
 
-			// Push changes and create PR.
-			await git.push('origin', branchName);
-			info(`Changes pushed to ${repo}`);
+            const branchName = `sync-packages-from-${github.context.repo.repo}`;
 
-			// Use octokit to create a pull request.
-			const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
-			await octokit.rest.pulls.create({
-				owner: github.context.repo.owner,
-				repo,
-				title: `Sync package from ${github.context.repo.repo} Repo`,
-				head: `sync-packages-from-${github.context.repo.repo}`,
-				base: 'master',
-				body: `This PR syncs the package from the [${github.context.repo.repo}](https://github.com/blockeraai/${github.context.repo.repo}) repository.`
-			});
-		}
-	} catch (error) {
-		console.log('Error log for Run:', error);
+            // Create branch and commit changes.
+            await git.checkout(['-b', branchName]);
+            await git.add('./*');
+            await git.commit(`Sync shared packages from ${github.context.repo.repo}`);
 
-		// No commits between master and sync-packages-from-${branchName}
-		if (422 === error.status) {
-			return;
-		}
+            // Push changes and create PR.
+            await git.push('origin', branchName);
+            info(`Changes pushed to ${repo}`);
 
-		setFailed(error.message);
-	}
+            // Use octokit to create a pull request.
+            const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
+            await octokit.rest.pulls.create({
+                owner: github.context.repo.owner,
+                repo,
+                title: `Sync package from ${github.context.repo.repo} Repo`,
+                head: `sync-packages-from-${github.context.repo.repo}`,
+                base: 'master',
+                body: `This PR syncs the package from the [${github.context.repo.repo}](https://github.com/blockeraai/${github.context.repo.repo}) repository.`
+            });
+        }
+    } catch (error) {
+        console.log('Error log for Run:', error);
+
+        // No commits between master and sync-packages-from-${branchName}
+        if (422 === error.status) {
+            return;
+        }
+
+        setFailed(error.message);
+    }
 };
 
 const result = run();
 
 result.catch((error) => {
-	console.log('Error log for Results:', error);
+    console.log('Error log for Results:', error);
 
-	// No commits between master and sync-packages-from-${branchName}.
-	if (422 === error.status) {
-		return;
-	}
+    // No commits between master and sync-packages-from-${branchName}.
+    if (422 === error.status) {
+        return;
+    }
 
-	setFailed(error.message);
+    setFailed(error.message);
 });
