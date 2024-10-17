@@ -39,7 +39,13 @@ export const run = async () => {
                 continue;
             }
 
-            const repoDir = path.join('./', repo);
+            const repoIdMatches = repo.exec(/\/\*\.git/gi);
+
+            if(!repoIdMatches || !repoIdMatches[0]){
+                continue;
+            }
+
+            const repoDir = path.join('./', repoIdMatches[0].replace('.git', ''));
             const repositoryURL = repo.replace(/http(?:s|):\/\//gi, '');
             const repoPath = `https://x-access-token:${getInput(
                 'BLOCKERABOT_PAT'
