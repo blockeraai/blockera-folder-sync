@@ -20,6 +20,12 @@ export const run = async () => {
             global: true
         });
 
+        // Get the current repository information from the context.
+        const { owner, repo: repoId } = github.context.repo;
+
+        // Construct the HTTPS URL for the current repository.
+        const currentRepoURL = `https://github.com/${owner}/${repoId}.git`;
+
         // Read blockera-folder-sync.json files from current repository!
         const packages = await readBlockeraFiles();
         info(`Package paths: ${packages}`);
@@ -29,7 +35,7 @@ export const run = async () => {
             const packagePaths = packages[repo];
 
             // Skip current repository!
-            if (repo === github.context.repo.repo) {
+            if (repo === currentRepoURL) {
                 continue;
             }
 
