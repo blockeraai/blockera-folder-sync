@@ -39,13 +39,13 @@ export const run = async () => {
                 continue;
             }
 
-            const repoIdMatches = /\/\*\.git/gi.exec(repo);
+            const repoIdMatches = /\/([a-zA-Z0-9_-]+)\.git$/.exec(repo);
 
-            if(!repoIdMatches || !repoIdMatches[0]){
+            if(!repoIdMatches || !repoIdMatches[0] || !repoIdMatches[1]){
                 continue;
             }
 
-            const repoDir = path.join('./', repoIdMatches[0].replace('.git', ''));
+            const repoDir = path.join('./', repoIdMatches[1]);
             const repositoryURL = repo.replace(/http(?:s|):\/\//gi, '');
             const repoPath = `https://x-access-token:${getInput(
                 'BLOCKERABOT_PAT'
