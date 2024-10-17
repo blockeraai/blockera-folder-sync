@@ -112,7 +112,7 @@ export const run = async () => {
             const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
             await octokit.rest.pulls.create({
                 owner: github.context.repo.owner,
-                repo,
+                repo: repoIdMatches[1],
                 title: `Sync package from ${github.context.repo.repo} Repo`,
                 head: `sync-packages-from-${github.context.repo.repo}`,
                 base: 'master',
