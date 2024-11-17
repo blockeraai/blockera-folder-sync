@@ -45052,7 +45052,7 @@ const run = async () => {
             git.checkout(['-b', branchName]).catch(async (error) => {
                 if (/A branch named '.*' already exists\./gi.test(e.message)) {
                     await git.checkout([branchName]);
-                    await git.pull();
+                    await git.pull('origin', 'main', { '--rebase': 'true' });
                 } else {
                     throw new Error(error);
                 }
