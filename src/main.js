@@ -64,6 +64,30 @@ export const run = async () => {
                 repoPath
             ]);
 
+            // Apply the user.name and user.email globally or within the repo.
+            await git.addConfig('user.name', 'blockerabot', undefined, {global: true});
+            await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com', undefined, {
+                global: true
+            });
+
+            const branchName = `sync-packages-from-${github.context.repo.repo}`;
+
+            info(`Create branch: ${branchName} ✅`);
+
+            git.checkout(['-b', branchName]).catch(async (error) => {
+                if (/A branch named '.*' already exists\./gi.test(e.message)) {
+                    await git.checkout([branchName]);
+                    await git.pull('origin', 'main', { '--rebase': 'true' });
+
+                    info('🎚Switch to exists branch')
+                } else {
+                    throw new Error(error);
+                }
+            });
+
+            info(`Git Pull from origin ${branchName} ✅`);
+            await git.pull('origin', branchName, { '--rebase': 'true' });
+
             // Check if there is at least one commit.
             const log = await git.log();
             let diff;
@@ -92,30 +116,6 @@ export const run = async () => {
                 await syncDirectories(srcDir, destDir);
                 info(`Synced package from ${srcDir} to ${destDir} of ${repo} repository ✅`);
             }
-
-            // Apply the user.name and user.email globally or within the repo.
-            await git.addConfig('user.name', 'blockerabot', undefined, {global: true});
-            await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com', undefined, {
-                global: true
-            });
-
-            const branchName = `sync-packages-from-${github.context.repo.repo}`;
-
-            info(`Create branch: ${branchName} ✅`);
-
-            git.checkout(['-b', branchName]).catch(async (error) => {
-                if (/A branch named '.*' already exists\./gi.test(e.message)) {
-                    await git.checkout([branchName]);
-                    await git.pull('origin', 'main', { '--rebase': 'true' });
-
-                    info('🎚Switch to exists branch')
-                } else {
-                    throw new Error(error);
-                }
-            });
-
-            info(`Git Pull from origin ${branchName} ✅`);
-            await git.pull('origin', branchName, { '--rebase': 'true' });
 
             // Commit changes.
             await git.add('./*');
