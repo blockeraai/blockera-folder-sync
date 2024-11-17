@@ -45035,7 +45035,7 @@ const run = async () => {
 
             const branchName = `sync-packages-from-${github.context.repo.repo}`;
 
-            switchToSyncBranch(branchName);
+            switchToSyncBranch(git, branchName);
 
             // Check if there is at least one commit.
             const log = await git.log();
