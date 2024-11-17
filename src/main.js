@@ -6,6 +6,22 @@ const simpleGit = require('simple-git');
 const path = require('path');
 const {syncDirectories, readBlockeraFiles} = require('./helpers');
 
+const switchToSyncBranch = (git, branchName) => {
+    info(`Create branch: ${branchName} `);
+
+    git.checkout(['-b', branchName]).catch(async (error) => {
+        if (/A branch named '.*' already exists\./gi.test(e.message)) {
+            info(`Switch to exists branch ${branchName} ✅`);
+            await git.checkout([branchName]);
+
+            info(`Git Pull from origin ${branchName} ✅`);
+            await git.pull('origin', branchName, ['--no-rebase']);
+        } else {
+            throw new Error(error);
+        }
+    });
+}
+
 /**
  * Main function to handle the GitHub Action workflow.
  *
@@ -72,21 +88,7 @@ export const run = async () => {
 
             const branchName = `sync-packages-from-${github.context.repo.repo}`;
 
-            info(`Create branch: ${branchName} ✅`);
-
-            git.checkout(['-b', branchName]).catch(async (error) => {
-                if (/A branch named '.*' already exists\./gi.test(e.message)) {
-                    await git.checkout([branchName]);
-                    await git.pull('origin', 'main', { '--rebase': 'true' });
-
-                    info('🎚Switch to exists branch')
-                } else {
-                    throw new Error(error);
-                }
-            });
-
-            info(`Git Pull from origin ${branchName} ✅`);
-            await git.pull('origin', branchName, ['--no-rebase']);
+            switchToSyncBranch(branchName);
 
             // Check if there is at least one commit.
             const log = await git.log();
