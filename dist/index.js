@@ -45033,7 +45033,7 @@ const run = async () => {
             });
 
             info(`Git Pull from origin ${branchName} ✅`);
-            await git.pull('origin', branchName, ['--force']);
+            await git.pull('origin', branchName, ['--no-rebase']);
 
             // Check if there is at least one commit.
             const log = await git.log();
