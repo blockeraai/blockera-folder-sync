@@ -45048,7 +45048,7 @@ const run = async () => {
 
             const branchName = `sync-packages-from-${github.context.repo.repo}`;
 
-            info(`ᛘ Create new branch`);
+            info(`Create branch: ${branchName} ✅`);
 
             git.checkout(['-b', branchName]).catch(async (error) => {
                 if (/A branch named '.*' already exists\./gi.test(e.message)) {
@@ -45061,11 +45061,14 @@ const run = async () => {
                 }
             });
 
+            info(`Git Pull from origin ${branchName} ✅`);
+            await git.pull('origin', branchName, { '--rebase': 'true' });
+
             // Commit changes.
             await git.add('./*');
             await git.commit(`Sync shared packages from ${github.context.repo.repo}`);
 
-            info(`✅ Commit Changelog`);
+            info(`Commit Changelog ✅`);
 
             // Push changes and create PR.
             await git.push('origin', branchName);
