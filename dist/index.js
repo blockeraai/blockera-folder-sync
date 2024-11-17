@@ -45048,11 +45048,14 @@ const run = async () => {
 
             const branchName = `sync-packages-from-${github.context.repo.repo}`;
 
-            // Create branch or Switch to exists branch.
+            info(`ᛘ Create new branch`);
+
             git.checkout(['-b', branchName]).catch(async (error) => {
                 if (/A branch named '.*' already exists\./gi.test(e.message)) {
                     await git.checkout([branchName]);
                     await git.pull('origin', 'main', { '--rebase': 'true' });
+
+                    info('🎚Switch to exists branch')
                 } else {
                     throw new Error(error);
                 }
@@ -45061,6 +45064,8 @@ const run = async () => {
             // Commit changes.
             await git.add('./*');
             await git.commit(`Sync shared packages from ${github.context.repo.repo}`);
+
+            info(`✅ Commit Changelog`);
 
             // Push changes and create PR.
             await git.push('origin', branchName);
@@ -45079,7 +45084,7 @@ const run = async () => {
                         body: `This PR syncs the package from the [${github.context.repo.repo}](https://github.com/blockeraai/${github.context.repo.repo}) repository.`
                     });
                 }
-            })
+            });
         }
     } catch (error) {
         console.log('Error log for Run:', error);
