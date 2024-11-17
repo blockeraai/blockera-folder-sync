@@ -27,7 +27,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.issue = exports.issueCommand = void 0;
-const os = __importStar(__nccwpck_require__(857));
+const os = __importStar(__nccwpck_require__(3238));
 const utils_1 = __nccwpck_require__(302);
 /**
  * Commands
@@ -138,7 +138,7 @@ exports.getIDToken = exports.getState = exports.saveState = exports.group = expo
 const command_1 = __nccwpck_require__(4914);
 const file_command_1 = __nccwpck_require__(4753);
 const utils_1 = __nccwpck_require__(302);
-const os = __importStar(__nccwpck_require__(857));
+const os = __importStar(__nccwpck_require__(3238));
 const path = __importStar(__nccwpck_require__(6928));
 const oidc_utils_1 = __nccwpck_require__(5306);
 /**
@@ -473,7 +473,7 @@ exports.prepareKeyValueMessage = exports.issueFileCommand = void 0;
 // We use any as a valid input type
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const fs = __importStar(__nccwpck_require__(9896));
-const os = __importStar(__nccwpck_require__(857));
+const os = __importStar(__nccwpck_require__(3238));
 const uuid_1 = __nccwpck_require__(7073);
 const utils_1 = __nccwpck_require__(302);
 function issueFileCommand(command, message) {
@@ -673,7 +673,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.summary = exports.markdownSummary = exports.SUMMARY_DOCS_URL = exports.SUMMARY_ENV_VAR = void 0;
-const os_1 = __nccwpck_require__(857);
+const os_1 = __nccwpck_require__(3238);
 const fs_1 = __nccwpck_require__(9896);
 const { access, appendFile, writeFile } = fs_1.promises;
 exports.SUMMARY_ENV_VAR = 'GITHUB_STEP_SUMMARY';
@@ -1648,7 +1648,7 @@ exports["default"] = _default;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Context = void 0;
 const fs_1 = __nccwpck_require__(9896);
-const os_1 = __nccwpck_require__(857);
+const os_1 = __nccwpck_require__(3238);
 class Context {
     /**
      * Hydrate the context from the environment
@@ -7089,7 +7089,7 @@ function localstorage() {
 	}
 }
 
-module.exports = __nccwpck_require__(897)(exports);
+module.exports = __nccwpck_require__(3278)(exports);
 
 const {formatters} = module.exports;
 
@@ -7108,7 +7108,7 @@ formatters.j = function (v) {
 
 /***/ }),
 
-/***/ 897:
+/***/ 3278:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
 
@@ -7648,7 +7648,7 @@ function init(debug) {
 	}
 }
 
-module.exports = __nccwpck_require__(897)(exports);
+module.exports = __nccwpck_require__(3278)(exports);
 
 const {formatters} = module.exports;
 
@@ -12341,7 +12341,7 @@ module.exports = Object.assign(simpleGit, { gitP: gitP2, simpleGit });
 
 "use strict";
 
-const os = __nccwpck_require__(857);
+const os = __nccwpck_require__(3238);
 const tty = __nccwpck_require__(2018);
 const hasFlag = __nccwpck_require__(3813);
 
@@ -34991,12 +34991,15 @@ function wrappy (fn, cb) {
 "use strict";
 __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
+/* harmony export */   getOpenedPullRequest: () => (/* binding */ getOpenedPullRequest),
 /* harmony export */   readBlockeraFiles: () => (/* binding */ readBlockeraFiles),
 /* harmony export */   syncDirectories: () => (/* binding */ syncDirectories)
 /* harmony export */ });
 const fs = __nccwpck_require__(9896);
 const {glob} = __nccwpck_require__(1363);
 const {exec} = __nccwpck_require__(5317);
+const github = __nccwpck_require__(3228);
+const {getInput} = __nccwpck_require__(7484);
 
 /**
  * Read and Parse blockera-folder-sync.json files to detect paths and dependent repositories lists.
@@ -35045,6 +35048,28 @@ const syncDirectories = (srcDir, destDir) => {
         });
     });
 };
+
+async function getOpenedPullRequest() {
+    // Get the current repository information from the context.
+    const {owner, repo} = github.context.repo;
+    // Use octokit to create a pull request.
+    const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
+
+    try {
+        const {data: pullRequests} = await octokit.rest.pulls.list({
+            owner,
+            repo,
+            state: 'open'
+        });
+
+        // Filter pull requests by title
+        return pullRequests.filter((pr) =>
+            pr.title.includes(`Sync package from ${repo} Repo`)
+        );
+    } catch (error) {
+        return [];
+    }
+}
 
 
 /***/ }),
@@ -35217,7 +35242,7 @@ module.exports = require("node:util");
 
 /***/ }),
 
-/***/ 857:
+/***/ 3238:
 /***/ ((module) => {
 
 "use strict";
@@ -38392,7 +38417,7 @@ exports.assertValidPattern = assertValidPattern;
 
 /***/ }),
 
-/***/ 3238:
+/***/ 857:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
@@ -39191,7 +39216,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.unescape = exports.escape = exports.AST = exports.Minimatch = exports.match = exports.makeRe = exports.braceExpand = exports.defaults = exports.filter = exports.GLOBSTAR = exports.sep = exports.minimatch = void 0;
 const brace_expansion_1 = __importDefault(__nccwpck_require__(8497));
 const assert_valid_pattern_js_1 = __nccwpck_require__(8895);
-const ast_js_1 = __nccwpck_require__(3238);
+const ast_js_1 = __nccwpck_require__(857);
 const escape_js_1 = __nccwpck_require__(6726);
 const unescape_js_1 = __nccwpck_require__(9829);
 const minimatch = (p, pattern, options = {}) => {
@@ -40188,7 +40213,7 @@ class Minimatch {
 }
 exports.Minimatch = Minimatch;
 /* c8 ignore start */
-var ast_js_2 = __nccwpck_require__(3238);
+var ast_js_2 = __nccwpck_require__(857);
 Object.defineProperty(exports, "AST", ({ enumerable: true, get: function () { return ast_js_2.AST; } }));
 var escape_js_2 = __nccwpck_require__(6726);
 Object.defineProperty(exports, "escape", ({ enumerable: true, get: function () { return escape_js_2.escape; } }));
@@ -41299,7 +41324,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PathScurry = exports.Path = exports.PathScurryDarwin = exports.PathScurryPosix = exports.PathScurryWin32 = exports.PathScurryBase = exports.PathPosix = exports.PathWin32 = exports.PathBase = exports.ChildrenCache = exports.ResolveCache = void 0;
-const lru_cache_1 = __nccwpck_require__(3278);
+const lru_cache_1 = __nccwpck_require__(897);
 const node_path_1 = __nccwpck_require__(6760);
 const node_url_1 = __nccwpck_require__(3136);
 const fs_1 = __nccwpck_require__(9896);
@@ -43292,7 +43317,7 @@ exports.PathScurry = process.platform === 'win32' ? PathScurryWin32
 
 /***/ }),
 
-/***/ 3278:
+/***/ 897:
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -44919,6 +44944,9 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
 /* harmony export */   run: () => (/* binding */ run)
 /* harmony export */ });
+/* harmony import */ var _helpers__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(6636);
+
+
 const {info, setFailed, getInput} = __nccwpck_require__(7484);
 const github = __nccwpck_require__(3228);
 const simpleGit = __nccwpck_require__(9065);
@@ -45020,25 +45048,36 @@ const run = async () => {
 
             const branchName = `sync-packages-from-${github.context.repo.repo}`;
 
-            // Create branch and commit changes.
-            await git.checkout(['-b', branchName]);
+            // Create branch or Switch to exists branch.
+            try {
+                await git.checkout(['-b', branchName]);
+            }catch (e){
+                await git.checkout([branchName]);
+                await git.pull();
+            }
+
+            // Commit changes.
             await git.add('./*');
             await git.commit(`Sync shared packages from ${github.context.repo.repo}`);
 
             // Push changes and create PR.
             await git.push('origin', branchName);
-            info(`Changes pushed to ${repo}`);
+            info(`Changes pushed to ${repo} ✅`);
 
-            // Use octokit to create a pull request.
-            const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
-            await octokit.rest.pulls.create({
-                owner: github.context.repo.owner,
-                repo: repoIdMatches[1],
-                title: `Sync package from ${github.context.repo.repo} Repo`,
-                head: `sync-packages-from-${github.context.repo.repo}`,
-                base: 'master',
-                body: `This PR syncs the package from the [${github.context.repo.repo}](https://github.com/blockeraai/${github.context.repo.repo}) repository.`
-            });
+            (0,_helpers__WEBPACK_IMPORTED_MODULE_0__.getOpenedPullRequest)().then((data) => {
+                if(!data.length){
+                    // Use octokit to create a pull request.
+                    const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
+                    octokit.rest.pulls.create({
+                        owner: github.context.repo.owner,
+                        repo: repoIdMatches[1],
+                        title: `Sync package from ${github.context.repo.repo} Repo`,
+                        head: `sync-packages-from-${github.context.repo.repo}`,
+                        base: 'master',
+                        body: `This PR syncs the package from the [${github.context.repo.repo}](https://github.com/blockeraai/${github.context.repo.repo}) repository.`
+                    });
+                }
+            })
         }
     } catch (error) {
         console.log('Error log for Run:', error);

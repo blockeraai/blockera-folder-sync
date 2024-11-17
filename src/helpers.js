@@ -1,6 +1,8 @@
 const fs = require('fs');
 const {glob} = require('glob');
 const {exec} = require('child_process');
+const github = require('@actions/github');
+const {getInput} = require('@actions/core');
 
 /**
  * Read and Parse blockera-folder-sync.json files to detect paths and dependent repositories lists.
@@ -49,3 +51,25 @@ export const syncDirectories = (srcDir, destDir) => {
         });
     });
 };
+
+export async function getOpenedPullRequest() {
+    // Get the current repository information from the context.
+    const {owner, repo} = github.context.repo;
+    // Use octokit to create a pull request.
+    const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
+
+    try {
+        const {data: pullRequests} = await octokit.rest.pulls.list({
+            owner,
+            repo,
+            state: 'open'
+        });
+
+        // Filter pull requests by title
+        return pullRequests.filter((pr) =>
+            pr.title.includes(`Sync package from ${repo} Repo`)
+        );
+    } catch (error) {
+        return [];
+    }
+}

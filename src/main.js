@@ -1,3 +1,5 @@
+import {getOpenedPullRequest} from "./helpers";
+
 const {info, setFailed, getInput} = require('@actions/core');
 const github = require('@actions/github');
 const simpleGit = require('simple-git');
@@ -99,25 +101,36 @@ export const run = async () => {
 
             const branchName = `sync-packages-from-${github.context.repo.repo}`;
 
-            // Create branch and commit changes.
-            await git.checkout(['-b', branchName]);
+            // Create branch or Switch to exists branch.
+            try {
+                await git.checkout(['-b', branchName]);
+            }catch (e){
+                await git.checkout([branchName]);
+                await git.pull();
+            }
+
+            // Commit changes.
             await git.add('./*');
             await git.commit(`Sync shared packages from ${github.context.repo.repo}`);
 
             // Push changes and create PR.
             await git.push('origin', branchName);
-            info(`Changes pushed to ${repo}`);
+            info(`Changes pushed to ${repo} ✅`);
 
-            // Use octokit to create a pull request.
-            const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
-            await octokit.rest.pulls.create({
-                owner: github.context.repo.owner,
-                repo: repoIdMatches[1],
-                title: `Sync package from ${github.context.repo.repo} Repo`,
-                head: `sync-packages-from-${github.context.repo.repo}`,
-                base: 'master',
-                body: `This PR syncs the package from the [${github.context.repo.repo}](https://github.com/blockeraai/${github.context.repo.repo}) repository.`
-            });
+            getOpenedPullRequest().then((data) => {
+                if(!data.length){
+                    // Use octokit to create a pull request.
+                    const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
+                    octokit.rest.pulls.create({
+                        owner: github.context.repo.owner,
+                        repo: repoIdMatches[1],
+                        title: `Sync package from ${github.context.repo.repo} Repo`,
+                        head: `sync-packages-from-${github.context.repo.repo}`,
+                        base: 'master',
+                        body: `This PR syncs the package from the [${github.context.repo.repo}](https://github.com/blockeraai/${github.context.repo.repo}) repository.`
+                    });
+                }
+            })
         }
     } catch (error) {
         console.log('Error log for Run:', error);
