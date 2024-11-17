@@ -23,7 +23,7 @@ export const run = async () => {
         });
 
         // Get the current repository information from the context.
-        const { owner, repo: repoId } = github.context.repo;
+        const {owner, repo: repoId} = github.context.repo;
 
         // Construct the HTTPS URL for the current repository.
         const currentRepoURL = `https://github.com/${owner}/${repoId}.git`;
@@ -43,7 +43,7 @@ export const run = async () => {
 
             const repoIdMatches = /\/([a-zA-Z0-9_-]+)\.git$/.exec(repo);
 
-            if(!repoIdMatches || !repoIdMatches[0] || !repoIdMatches[1]){
+            if (!repoIdMatches || !repoIdMatches[0] || !repoIdMatches[1]) {
                 continue;
             }
 
@@ -102,12 +102,14 @@ export const run = async () => {
             const branchName = `sync-packages-from-${github.context.repo.repo}`;
 
             // Create branch or Switch to exists branch.
-            try {
-                await git.checkout(['-b', branchName]);
-            }catch (e){
-                await git.checkout([branchName]);
-                await git.pull();
-            }
+            git.checkout(['-b', branchName]).catch(async (error) => {
+                if (/A branch named '.*' already exists\./gi.test(e.message)) {
+                    await git.checkout([branchName]);
+                    await git.pull();
+                } else {
+                    throw new Error(error);
+                }
+            });
 
             // Commit changes.
             await git.add('./*');
@@ -118,7 +120,7 @@ export const run = async () => {
             info(`Changes pushed to ${repo} ✅`);
 
             getOpenedPullRequest().then((data) => {
-                if(!data.length){
+                if (!data.length) {
                     // Use octokit to create a pull request.
                     const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
                     octokit.rest.pulls.create({
