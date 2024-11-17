@@ -44969,6 +44969,45 @@ const switchToSyncBranch = (git, branchName) => {
     });
 }
 
+const commit = async (git, {
+    repo,
+    branchName,
+    repoIdMatches,
+}) => {
+    const repoStatus = await git.status();
+
+    info('Your repository is Clean. ✅');
+
+    if(repoStatus.isClean()){
+        return;
+    }
+
+    // Commit changes.
+    await git.add('./*');
+    await git.commit(`Sync shared packages from ${github.context.repo.repo}`);
+
+    info(`Commit Changelog ✅`);
+
+    // Push changes and create PR.
+    await git.push('origin', branchName);
+    info(`Changes pushed to ${repo} ✅`);
+
+    (0,_helpers__WEBPACK_IMPORTED_MODULE_0__.getOpenedPullRequest)().then((data) => {
+        if (!data.length) {
+            // Use octokit to create a pull request.
+            const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
+            octokit.rest.pulls.create({
+                owner: github.context.repo.owner,
+                repo: repoIdMatches[1],
+                title: `Sync package from ${github.context.repo.repo} Repo`,
+                head: `sync-packages-from-${github.context.repo.repo}`,
+                base: 'master',
+                body: `This PR syncs the package from the [${github.context.repo.repo}](https://github.com/blockeraai/${github.context.repo.repo}) repository.`
+            });
+        }
+    });
+};
+
 /**
  * Main function to handle the GitHub Action workflow.
  *
@@ -45066,29 +45105,10 @@ const run = async () => {
                 info(`Synced package from ${srcDir} to ${destDir} of ${repo} repository ✅`);
             }
 
-            // Commit changes.
-            await git.add('./*');
-            await git.commit(`Sync shared packages from ${github.context.repo.repo}`);
-
-            info(`Commit Changelog ✅`);
-
-            // Push changes and create PR.
-            await git.push('origin', branchName);
-            info(`Changes pushed to ${repo} ✅`);
-
-            (0,_helpers__WEBPACK_IMPORTED_MODULE_0__.getOpenedPullRequest)().then((data) => {
-                if (!data.length) {
-                    // Use octokit to create a pull request.
-                    const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
-                    octokit.rest.pulls.create({
-                        owner: github.context.repo.owner,
-                        repo: repoIdMatches[1],
-                        title: `Sync package from ${github.context.repo.repo} Repo`,
-                        head: `sync-packages-from-${github.context.repo.repo}`,
-                        base: 'master',
-                        body: `This PR syncs the package from the [${github.context.repo.repo}](https://github.com/blockeraai/${github.context.repo.repo}) repository.`
-                    });
-                }
+            await commit(git, {
+                repo,
+                branchName,
+                repoIdMatches,
             });
         }
     } catch (error) {
