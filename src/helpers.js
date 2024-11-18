@@ -56,7 +56,7 @@ export async function getOpenedPullRequest() {
     // Get the current repository information from the context.
     const {owner, repo} = github.context.repo;
     // Use octokit to create a pull request.
-    const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
+    const octokit = github.getOctokit(getInput('TOKEN'));
 
     try {
         const {data: pullRequests} = await octokit.rest.pulls.list({

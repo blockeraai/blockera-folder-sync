@@ -2,11 +2,14 @@ name: 'Blockera Packages Manager'
 description: 'The Blockera Github Action to management packages.'
 author: 'blockerabot'
 inputs:
-  GITHUB_TOKEN:
-    description: 'GitHub Token for authentication'
+  TOKEN:
+    description: 'The Personal Access Token for authentication'
     required: true
-  BLOCKERABOT_PAT:
-    description: 'Personal access token for Blockerabot'
+  USERNAME:
+    description: 'The username of bot account'
+    required: true
+  PASSWORD:
+    description: 'The password of bot account'
     required: true
 
 runs:
