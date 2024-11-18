@@ -1,6 +1,8 @@
 name: 'Blockera Packages Manager'
 description: 'The Blockera Github Action to management packages.'
 author: 'blockerabot'
+icon: 📂🔄
+color: blue
 inputs:
   TOKEN:
     description: 'The Personal Access Token for authentication'
