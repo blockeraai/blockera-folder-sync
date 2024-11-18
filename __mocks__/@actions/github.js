@@ -3,6 +3,9 @@ const github = {
         pulls: {
             create: jest.fn()
         }
-    })
+    }),
+    context: {
+        repo: 'blockera-folder-sync'
+    }
 };
 module.exports = github;
