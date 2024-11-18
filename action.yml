@@ -2,7 +2,7 @@ name: 'Blockera Packages Manager'
 description: 'The Blockera Github Action to management packages.'
 author: 'blockerabot'
 branding:
-  icon: sync
+  icon: package
   color: blue
 inputs:
   TOKEN:
