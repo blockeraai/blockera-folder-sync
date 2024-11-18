@@ -8,8 +8,8 @@ inputs:
   USERNAME:
     description: 'The username of bot account'
     required: true
-  PASSWORD:
-    description: 'The password of bot account'
+  EMAIL:
+    description: 'The email address of bot account'
     required: true
 
 runs:

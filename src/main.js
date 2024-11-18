@@ -96,7 +96,7 @@ export const run = async () => {
 
     // Apply the user.name and user.email globally or within the repo.
     await git.addConfig('user.name', getInput('USERNAME'), undefined, {global: true});
-    await git.addConfig('user.email', getInput('PASSWORD'), undefined, {
+    await git.addConfig('user.email', getInput('EMAIL'), undefined, {
         global: true
     });
 
@@ -144,7 +144,7 @@ export const run = async () => {
 
         // Apply the user.name and user.email globally or within the repo.
         await git.addConfig('user.name', getInput('USERNAME'), undefined, {global: true});
-        await git.addConfig('user.email', getInput('PASSWORD'), undefined, {
+        await git.addConfig('user.email', getInput('EMAIL'), undefined, {
             global: true
         });
 
