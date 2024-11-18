@@ -35053,7 +35053,7 @@ async function getOpenedPullRequest() {
     // Get the current repository information from the context.
     const {owner, repo} = github.context.repo;
     // Use octokit to create a pull request.
-    const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
+    const octokit = github.getOctokit(getInput('TOKEN'));
 
     try {
         const {data: pullRequests} = await octokit.rest.pulls.list({
@@ -45014,7 +45014,7 @@ const commit = async (git, {
         if (!data.length) {
             try {
                 // Use octokit to create a pull request.
-                const octokit = github.getOctokit(getInput('BLOCKERABOT_PAT'));
+                const octokit = github.getOctokit(getInput('TOKEN'));
                 octokit.rest.pulls.create({
                     owner: github.context.repo.owner,
                     repo: repoIdMatches[1],
@@ -45042,8 +45042,8 @@ const run = async () => {
     const git = simpleGit();
 
     // Apply the user.name and user.email globally or within the repo.
-    await git.addConfig('user.name', 'blockerabot', undefined, {global: true});
-    await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com', undefined, {
+    await git.addConfig('user.name', getInput('USERNAME'), undefined, {global: true});
+    await git.addConfig('user.email', getInput('PASSWORD'), undefined, {
         global: true
     });
 
@@ -45075,7 +45075,7 @@ const run = async () => {
         const repoDir = path.join('./', repoIdMatches[1]);
         const repositoryURL = repo.replace(/http(?:s|):\/\//gi, '');
         const repoPath = `https://x-access-token:${getInput(
-            'BLOCKERABOT_PAT'
+            'TOKEN'
         )}@${repositoryURL}`;
 
         // Try to clone of repository ...
@@ -45090,8 +45090,8 @@ const run = async () => {
         ]);
 
         // Apply the user.name and user.email globally or within the repo.
-        await git.addConfig('user.name', 'blockerabot', undefined, {global: true});
-        await git.addConfig('user.email', 'blockeraai+githubbot@gmail.com', undefined, {
+        await git.addConfig('user.name', getInput('USERNAME'), undefined, {global: true});
+        await git.addConfig('user.email', getInput('PASSWORD'), undefined, {
             global: true
         });
 
