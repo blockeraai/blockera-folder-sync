@@ -5,3 +5,4 @@ packages
 src/test.js
 sudo-codes
 src/patch.js
+.DS_Store
