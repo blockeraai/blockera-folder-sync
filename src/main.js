@@ -208,6 +208,8 @@ export const run = async () => {
         }).catch((error) => {
             logInfo('error', error.message);
         });
+
+        process.chdir('..');
     }
 };
 
