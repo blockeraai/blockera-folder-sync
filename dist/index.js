@@ -45002,12 +45002,18 @@ const commit = async (git, {
     }
 
     // Commit changes.
-    await git.add('./*');
-    await git.commit(`Sync shared packages from ${github.context.repo.repo}`);
+    await git.add('./*').catch((error) => {
+        logInfo('error', error.message);
+    });
+    await git.commit(`Sync shared packages from ${github.context.repo.repo}`).catch((error) => {
+        logInfo('error', error.message);
+    });
     logInfo('success', `Commit Changelogs.`);
 
     // Push changes and create PR.
-    await git.push('origin', branchName);
+    await git.push('origin', branchName).catch((error) => {
+        logInfo('error', error.message);
+    });
     logInfo('success', `Changes pushed to ${repo}`);
 
     (0,_helpers__WEBPACK_IMPORTED_MODULE_0__.getOpenedPullRequest)().then((data) => {
@@ -45042,9 +45048,13 @@ const run = async () => {
     const git = simpleGit();
 
     // Apply the user.name and user.email globally or within the repo.
-    await git.addConfig('user.name', getInput('USERNAME'), undefined, {global: true});
+    await git.addConfig('user.name', getInput('USERNAME'), undefined, {global: true}).catch((error) => {
+        logInfo('error', error.message);
+    });
     await git.addConfig('user.email', getInput('EMAIL'), undefined, {
         global: true
+    }).catch((error) => {
+        logInfo('error', error.message);
     });
 
     // Get the current repository information from the context.
@@ -45079,20 +45089,30 @@ const run = async () => {
         )}@${repositoryURL}`;
 
         // Try to clone of repository ...
-        await git.clone(repoPath, repoDir);
+        await git.clone(repoPath, repoDir).catch((error) => {
+            logInfo('error', error.message);
+        });
 
         // Set remote with access token for pushing.
-        await git.cwd(repoDir);
+        await git.cwd(repoDir).catch((error) => {
+            logInfo('error', error.message);
+        });
         await git.remote([
             'set-url',
             'origin',
             repoPath
-        ]);
+        ]).catch((error) => {
+            logInfo('error', error.message);
+        });
 
         // Apply the user.name and user.email globally or within the repo.
-        await git.addConfig('user.name', getInput('USERNAME'), undefined, {global: true});
+        await git.addConfig('user.name', getInput('USERNAME'), undefined, {global: true}).catch((error) => {
+            logInfo('error', error.message);
+        });
         await git.addConfig('user.email', getInput('EMAIL'), undefined, {
             global: true
+        }).catch((error) => {
+            logInfo('error', error.message);
         });
 
         const branchName = `sync-packages-from-${github.context.repo.repo}`;
@@ -45132,6 +45152,8 @@ const run = async () => {
             repo,
             branchName,
             repoIdMatches,
+        }).catch((error) => {
+            logInfo('error', error.message);
         });
     }
 };
