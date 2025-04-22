@@ -45124,18 +45124,14 @@ const run = async () => {
 					branchName,
 					repoIdMatches
 				});
-
-				process.chdir('..');
 			} catch (error) {
 				logInfo('error', `Failed processing repo ${repo}: ${error.message}`);
-				process.chdir('..');
-				continue;
-			} finally {
-				// Clean up the cloned repo after processing
-				if (fs.existsSync(repoDir)) {
-					fs.rmSync(repoDir, { recursive: true, force: true });
-					logInfo('info', `Cleaned up local repo folder: ${repoDir}`);
-				}
+			}
+
+            // Clean up the cloned repo after processing
+			if (fs.existsSync(repoDir)) {
+				fs.rmSync(repoDir, { recursive: true, force: true });
+				logInfo('info', `Cleaned up local repo folder: ${repoDir}`);
 			}
 		}
 	} catch (error) {
