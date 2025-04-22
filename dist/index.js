@@ -45076,20 +45076,21 @@ const run = async () => {
             const repoPath = `https://x-access-token:${getInput('TOKEN')}@${repositoryURL}`;
 
             try {
-                // Try to clone repository
-                await git.clone(repoPath, repoDir);
+                // Use a new git instance in the repo directory.
+                const repoGit = simpleGit({
+                    baseDir: repoDir,    // set working dir properly.
+                    binary: 'git'
+                });
 
-                // Set remote with access token for pushing.
-                await git.cwd(repoDir);
-                await git.remote(['set-url', 'origin', repoPath]);
-
-                // Apply git config in repo directory
-                await git.addConfig('user.name', getInput('USERNAME'), undefined, {global: true});
-                await git.addConfig('user.email', getInput('EMAIL'), undefined, {global: true});
+                await repoGit.clone(repoPath, repoDir);
+                await repoGit.cwd(repoDir);
+                await repoGit.remote(['set-url', 'origin', repoPath]);
+                await repoGit.addConfig('user.name', getInput('USERNAME'), undefined, {global: true});
+                await repoGit.addConfig('user.email', getInput('EMAIL'), undefined, {global: true});
 
                 const branchName = `sync-packages-from-${github.context.repo.repo}`;
 
-                await switchToSyncBranch(git, branchName);
+                await switchToSyncBranch(repoGit, branchName);
 
                 // Check if there is at least one commit.
                 const log = await git.log();
@@ -45111,11 +45112,11 @@ const run = async () => {
                     logInfo('success', `Synced package from ${srcDir} to ${destDir} of ${repo} repository ✅`);
                 }
 
-                await commit(git, {
-                    repo,
-                    branchName,
-                    repoIdMatches,
-                });
+                await commit(repoGit, {
+					repo,
+					branchName,
+					repoIdMatches
+				});
 
                 process.chdir('..');
             } catch (error) {
