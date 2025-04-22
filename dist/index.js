@@ -45076,13 +45076,14 @@ const run = async () => {
             const repoPath = `https://x-access-token:${getInput('TOKEN')}@${repositoryURL}`;
 
             try {
+                await git.clone(repoPath, repoDir);
+
                 // Use a new git instance in the repo directory.
                 const repoGit = simpleGit({
                     baseDir: repoDir,    // set working dir properly.
                     binary: 'git'
                 });
 
-                await repoGit.clone(repoPath, repoDir);
                 await repoGit.cwd(repoDir);
                 await repoGit.remote(['set-url', 'origin', repoPath]);
                 await repoGit.addConfig('user.name', getInput('USERNAME'), undefined, {global: true});
