@@ -91,7 +91,9 @@ const commit = async (git, {
 export const run = async () => {
     try {
         // Set up Git configuration.
-        const git = simpleGit();
+        const git = simpleGit({
+            binary: 'git'
+        });
 
         // Apply the user.name and user.email globally
         await git.addConfig('user.name', getInput('USERNAME'), undefined, {global: true});
