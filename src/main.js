@@ -177,7 +177,7 @@ export const run = async () => {
 					repoIdMatches
 				});
 			} catch (error) {
-				logInfo('error', `Failed processing repo ${repo}: ${error.message}`);
+				logInfo('error', `Failed processing repo ${repo}: ${error?.message || error}`);
 			}
 
 			// Clean up the cloned repo after processing
