@@ -34997,10 +34997,10 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */   syncDirectories: () => (/* binding */ syncDirectories)
 /* harmony export */ });
 const fs = __nccwpck_require__(9896);
-const {glob} = __nccwpck_require__(1363);
-const {exec} = __nccwpck_require__(5317);
+const { glob } = __nccwpck_require__(1363);
+const { exec } = __nccwpck_require__(5317);
 const github = __nccwpck_require__(3228);
-const {getInput} = __nccwpck_require__(7484);
+const { getInput } = __nccwpck_require__(7484);
 
 const STATUSES = {
 	loading: '⌛ ',
@@ -35026,30 +35026,26 @@ const logInfo = (status, data) => {
  * @returns {Array<*>} the array of founded packages.
  */
 const readBlockeraFiles = async (staticRepository = '') => {
-    const packages = {};
+	const packages = {};
 
-    // Traverse through directories to find blockera-folder-sync.json files.
-    const blockeraFiles = await glob('**/blockera-folder-sync.json');
-    logInfo('blockeraFiles', blockeraFiles);
+	// Traverse through directories to find blockera-folder-sync.json files.
+	const blockeraFiles = await glob('**/blockera-folder-sync.json');
 
-    blockeraFiles.forEach((blockeraFile) => {
-        if (staticRepository && !blockeraFile.includes(staticRepository)) {
-            return;
-        }
+	blockeraFiles.forEach((blockeraFile) => {
+		const data = JSON.parse(fs.readFileSync(blockeraFile, 'utf8'));
 
-        const data = JSON.parse(fs.readFileSync(blockeraFile, 'utf8'));
+		if (data.path && data.dependent && data.dependent.repositories) {
+			if (!staticRepository || !staticRepository.includes(data.dependent.repositories)) {
+				return;
+			}
 
-        if (data.path && data.dependent && data.dependent.repositories) {
-            for (const repo of data.dependent.repositories) {
-                packages[repo] = [
-                    ...(packages[repo] || []),
-                    data.path
-                ];
-            }
-        }
-    });
+			for (const repo of data.dependent.repositories) {
+				packages[repo] = [...(packages[repo] || []), data.path];
+			}
+		}
+	});
 
-    return packages;
+	return packages;
 };
 
 /**
@@ -35060,39 +35056,37 @@ const readBlockeraFiles = async (staticRepository = '') => {
  * @returns {Promise<void>}
  */
 const syncDirectories = (srcDir, destDir) => {
-    return new Promise((resolve, reject) => {
-        const rsyncCommand = `rsync -av --progress ${srcDir} ${destDir} --delete`;
-        exec(rsyncCommand, (error, stdout, stderr) => {
-            if (error) {
-                reject(`Error syncing directories: ${stderr}`);
-            } else {
-                console.log(`rsync output: ${stdout}`);
-                resolve();
-            }
-        });
-    });
+	return new Promise((resolve, reject) => {
+		const rsyncCommand = `rsync -av --progress ${srcDir} ${destDir} --delete`;
+		exec(rsyncCommand, (error, stdout, stderr) => {
+			if (error) {
+				reject(`Error syncing directories: ${stderr}`);
+			} else {
+				console.log(`rsync output: ${stdout}`);
+				resolve();
+			}
+		});
+	});
 };
 
 async function getOpenedPullRequest() {
-    // Get the current repository information from the context.
-    const {owner, repo} = github.context.repo;
-    // Use octokit to create a pull request.
-    const octokit = github.getOctokit(getInput('TOKEN'));
+	// Get the current repository information from the context.
+	const { owner, repo } = github.context.repo;
+	// Use octokit to create a pull request.
+	const octokit = github.getOctokit(getInput('TOKEN'));
 
-    try {
-        const {data: pullRequests} = await octokit.rest.pulls.list({
-            owner,
-            repo,
-            state: 'open'
-        });
+	try {
+		const { data: pullRequests } = await octokit.rest.pulls.list({
+			owner,
+			repo,
+			state: 'open'
+		});
 
-        // Filter pull requests by title
-        return pullRequests.filter((pr) =>
-            pr.title.includes(`Sync package from ${repo} Repo`)
-        );
-    } catch (error) {
-        return [];
-    }
+		// Filter pull requests by title
+		return pullRequests.filter((pr) => pr.title.includes(`Sync package from ${repo} Repo`));
+	} catch (error) {
+		return [];
+	}
 }
 
 
