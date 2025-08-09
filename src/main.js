@@ -22,26 +22,34 @@ const logInfo = (status, data) => {
 	console.log(STATUSES[status], data);
 };
 
-const switchToSyncBranch = async (git, branchName) => {
-	logInfo('loading', `Create branch: ${branchName}`);
+const switchToSyncBranch = async (git, branchName, createSyncBranch, baseBranch) => {
+	if (createSyncBranch === 'true') {
+		logInfo('loading', `Create branch: ${branchName}`);
 
-	try {
-		await git.checkout(['-b', branchName]);
-	} catch (error) {
-		if (/A branch named '.*' already exists\./gi.test(error.message)) {
-			logInfo('loading', `Switch to exists branch ${branchName}`);
-			await git.checkout([branchName]);
+		try {
+			await git.checkout(['-b', branchName]);
+		} catch (error) {
+			if (/A branch named '.*' already exists\./gi.test(error.message)) {
+				logInfo('loading', `Switch to exists branch ${branchName}`);
+				await git.checkout([branchName]);
 
-			logInfo('loading', `Git Pull from origin/${branchName}`);
-			await git.pull('origin', branchName, ['--no-rebase']);
-		} else {
-			throw error;
+				logInfo('loading', `Git Pull from origin/${branchName}`);
+				await git.pull('origin', branchName, ['--no-rebase']);
+			} else {
+				throw error;
+			}
 		}
+	} else {
+		logInfo('loading', `Switching to base branch: ${baseBranch}`);
+		await git.checkout([baseBranch]);
+		await git.pull('origin', baseBranch, ['--no-rebase']);
 	}
 };
 
 const commit = async (git, { repo, branchName, repoIdMatches }) => {
 	const repoStatus = await git.status();
+	const createSyncBranch = getInput('CREATE_SYNC_BRANCH');
+	const baseBranch = getInput('BASE_BRANCH');
 
 	if (repoStatus.isClean()) {
 		logInfo('success', 'Your repository is Clean.');
@@ -54,27 +62,31 @@ const commit = async (git, { repo, branchName, repoIdMatches }) => {
 		await git.commit(`Sync shared packages from ${github.context.repo.repo}`);
 		logInfo('success', `Commit Changelogs.`);
 
-		// Push changes and create PR.
-		await git.push(['--set-upstream', 'origin', branchName]);
+		// Push changes
+		const targetBranch = createSyncBranch === 'true' ? branchName : baseBranch;
+		await git.push(['--set-upstream', 'origin', targetBranch]);
 		logInfo('success', `Changes pushed to ${repo}`);
 
-		const openPRs = await getOpenedPullRequest();
-		if (!openPRs.length) {
-			// Use octokit to create a pull request.
-			const octokit = github.getOctokit(getInput('TOKEN'));
-			await octokit.rest.pulls.create({
-				owner: github.context.repo.owner,
-				repo: repoIdMatches[1],
-				title: `Sync package from ${github.context.repo.repo} Repo`,
-				head: branchName,
-				base: 'master',
-				body: `This PR syncs the package from the [${github.context.repo.repo}](https://github.com/blockeraai/${github.context.repo.repo}) repository.`
-			});
+		// Only create PR if we're using a sync branch
+		if (createSyncBranch === 'true') {
+			const openPRs = await getOpenedPullRequest();
+			if (!openPRs.length) {
+				// Use octokit to create a pull request.
+				const octokit = github.getOctokit(getInput('TOKEN'));
+				await octokit.rest.pulls.create({
+					owner: github.context.repo.owner,
+					repo: repoIdMatches[1],
+					title: `Sync package from ${github.context.repo.repo} Repo`,
+					head: branchName,
+					base: baseBranch,
+					body: `This PR syncs the package from the [${github.context.repo.repo}](https://github.com/blockeraai/${github.context.repo.repo}) repository.`
+				});
 
-			logInfo(
-				'success',
-				`Created The Sync package from ${github.context.repo.repo} Repo Pull Request.`
-			);
+				logInfo(
+					'success',
+					`Created The Sync package from ${github.context.repo.repo} Repo Pull Request.`
+				);
+			}
 		}
 	} catch (error) {
 		logInfo('error', error.message);
@@ -146,8 +158,10 @@ export const run = async () => {
 				});
 
 				const branchName = `sync-packages-from-${github.context.repo.repo}`;
+				const createSyncBranch = getInput('CREATE_SYNC_BRANCH');
+				const baseBranch = getInput('BASE_BRANCH');
 
-				await switchToSyncBranch(repoGit, branchName);
+				await switchToSyncBranch(repoGit, branchName, createSyncBranch, baseBranch);
 
 				// Check if there is at least one commit.
 				const log = await git.log();
@@ -181,7 +195,7 @@ export const run = async () => {
 				logInfo('error', `Failed processing repo ${repo}: ${error.message}`);
 			}
 
-            // Clean up the cloned repo after processing
+			// Clean up the cloned repo after processing
 			if (fs.existsSync(repoDir)) {
 				fs.rmSync(repoDir, { recursive: true, force: true });
 				logInfo('info', `Cleaned up local repo folder: ${repoDir}`);
