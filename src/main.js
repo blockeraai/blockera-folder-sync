@@ -4,23 +4,8 @@ const { info, setFailed, getInput } = require('@actions/core');
 const github = require('@actions/github');
 const simpleGit = require('simple-git');
 const path = require('path');
-const { syncDirectories, readBlockeraFiles } = require('./helpers');
 const fs = require('fs');
-const STATUSES = {
-	loading: '⌛ ',
-	info: 'ℹ️ Info: ',
-	error: '🚨 ERROR: ',
-	warning: '⚠️ WARNING: ',
-	success: '✅ SUCCESS: '
-};
-
-const logInfo = (status, data) => {
-	if ('string' === typeof data) {
-		console.log(STATUSES[status] + data);
-		return;
-	}
-	console.log(STATUSES[status], data);
-};
+const { syncDirectories, readBlockeraFiles, logInfo } = require('./helpers');
 
 const switchToSyncBranch = async (git, branchName, createSyncBranch, baseBranch) => {
 	if (createSyncBranch === 'true') {

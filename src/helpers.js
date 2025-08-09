@@ -4,6 +4,22 @@ const {exec} = require('child_process');
 const github = require('@actions/github');
 const {getInput} = require('@actions/core');
 
+const STATUSES = {
+	loading: '⌛ ',
+	info: 'ℹ️ Info: ',
+	error: '🚨 ERROR: ',
+	warning: '⚠️ WARNING: ',
+	success: '✅ SUCCESS: '
+};
+
+export const logInfo = (status, data) => {
+	if ('string' === typeof data) {
+		console.log(STATUSES[status] + data);
+		return;
+	}
+	console.log(STATUSES[status], data);
+};
+
 /**
  * Read and Parse blockera-folder-sync.json files to detect paths and dependent repositories lists.
  *
@@ -16,6 +32,7 @@ export const readBlockeraFiles = async (staticRepository = '') => {
 
     // Traverse through directories to find blockera-folder-sync.json files.
     const blockeraFiles = await glob('**/blockera-folder-sync.json');
+    logInfo('blockeraFiles', blockeraFiles);
 
     blockeraFiles.forEach((blockeraFile) => {
         if (staticRepository && !blockeraFile.includes(staticRepository)) {

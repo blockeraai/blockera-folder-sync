@@ -34992,6 +34992,7 @@ function wrappy (fn, cb) {
 __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
 /* harmony export */   getOpenedPullRequest: () => (/* binding */ getOpenedPullRequest),
+/* harmony export */   logInfo: () => (/* binding */ logInfo),
 /* harmony export */   readBlockeraFiles: () => (/* binding */ readBlockeraFiles),
 /* harmony export */   syncDirectories: () => (/* binding */ syncDirectories)
 /* harmony export */ });
@@ -35000,6 +35001,22 @@ const {glob} = __nccwpck_require__(1363);
 const {exec} = __nccwpck_require__(5317);
 const github = __nccwpck_require__(3228);
 const {getInput} = __nccwpck_require__(7484);
+
+const STATUSES = {
+	loading: '⌛ ',
+	info: 'ℹ️ Info: ',
+	error: '🚨 ERROR: ',
+	warning: '⚠️ WARNING: ',
+	success: '✅ SUCCESS: '
+};
+
+const logInfo = (status, data) => {
+	if ('string' === typeof data) {
+		console.log(STATUSES[status] + data);
+		return;
+	}
+	console.log(STATUSES[status], data);
+};
 
 /**
  * Read and Parse blockera-folder-sync.json files to detect paths and dependent repositories lists.
@@ -35013,6 +35030,7 @@ const readBlockeraFiles = async (staticRepository = '') => {
 
     // Traverse through directories to find blockera-folder-sync.json files.
     const blockeraFiles = await glob('**/blockera-folder-sync.json');
+    logInfo('blockeraFiles', blockeraFiles);
 
     blockeraFiles.forEach((blockeraFile) => {
         if (staticRepository && !blockeraFile.includes(staticRepository)) {
@@ -44957,23 +44975,8 @@ const { info, setFailed, getInput } = __nccwpck_require__(7484);
 const github = __nccwpck_require__(3228);
 const simpleGit = __nccwpck_require__(9065);
 const path = __nccwpck_require__(6928);
-const { syncDirectories, readBlockeraFiles } = __nccwpck_require__(6636);
 const fs = __nccwpck_require__(9896);
-const STATUSES = {
-	loading: '⌛ ',
-	info: 'ℹ️ Info: ',
-	error: '🚨 ERROR: ',
-	warning: '⚠️ WARNING: ',
-	success: '✅ SUCCESS: '
-};
-
-const logInfo = (status, data) => {
-	if ('string' === typeof data) {
-		console.log(STATUSES[status] + data);
-		return;
-	}
-	console.log(STATUSES[status], data);
-};
+const { syncDirectories, readBlockeraFiles, logInfo } = __nccwpck_require__(6636);
 
 const switchToSyncBranch = async (git, branchName, createSyncBranch, baseBranch) => {
 	if (createSyncBranch === 'true') {
