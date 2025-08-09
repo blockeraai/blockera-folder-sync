@@ -7,15 +7,21 @@ const {getInput} = require('@actions/core');
 /**
  * Read and Parse blockera-folder-sync.json files to detect paths and dependent repositories lists.
  *
+ * @param {string} staticRepository - The static repository to sync changes into. default is empty.
+ *
  * @returns {Array<*>} the array of founded packages.
  */
-export const readBlockeraFiles = async () => {
+export const readBlockeraFiles = async (staticRepository = '') => {
     const packages = {};
 
     // Traverse through directories to find blockera-folder-sync.json files.
     const blockeraFiles = await glob('**/blockera-folder-sync.json');
 
     blockeraFiles.forEach((blockeraFile) => {
+        if (staticRepository && !blockeraFile.includes(staticRepository)) {
+            return;
+        }
+
         const data = JSON.parse(fs.readFileSync(blockeraFile, 'utf8'));
 
         if (data.path && data.dependent && data.dependent.repositories) {

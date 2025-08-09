@@ -22,6 +22,10 @@ inputs:
     description: 'Whether to create a new sync branch (true) or commit directly to base branch (false)'
     required: false
     default: 'true'
+  STATIC_REPOSITORY:
+    description: 'The static repository to sync changes into'
+    required: false
+    default: 'https://github.com/blockeraai/blockera.git'
 
 runs:
   using: 'node20'

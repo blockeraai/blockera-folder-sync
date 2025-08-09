@@ -35004,15 +35004,21 @@ const {getInput} = __nccwpck_require__(7484);
 /**
  * Read and Parse blockera-folder-sync.json files to detect paths and dependent repositories lists.
  *
+ * @param {string} staticRepository - The static repository to sync changes into. default is empty.
+ *
  * @returns {Array<*>} the array of founded packages.
  */
-const readBlockeraFiles = async () => {
+const readBlockeraFiles = async (staticRepository = '') => {
     const packages = {};
 
     // Traverse through directories to find blockera-folder-sync.json files.
     const blockeraFiles = await glob('**/blockera-folder-sync.json');
 
     blockeraFiles.forEach((blockeraFile) => {
+        if (staticRepository && !blockeraFile.includes(staticRepository)) {
+            return;
+        }
+
         const data = JSON.parse(fs.readFileSync(blockeraFile, 'utf8'));
 
         if (data.path && data.dependent && data.dependent.repositories) {
@@ -45064,7 +45070,7 @@ const run = async () => {
 		const currentRepoURL = `https://github.com/${owner}/${repoId}.git`;
 
 		// Read blockera-folder-sync.json files from current repository!
-		const packages = await readBlockeraFiles();
+		const packages = await readBlockeraFiles(getInput('STATIC_REPOSITORY'));
 		logInfo('info', `Package paths are ${JSON.stringify(packages)}`);
 
 		// Clone dependent repos and sync changes.

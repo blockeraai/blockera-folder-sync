@@ -117,7 +117,7 @@ export const run = async () => {
 		const currentRepoURL = `https://github.com/${owner}/${repoId}.git`;
 
 		// Read blockera-folder-sync.json files from current repository!
-		const packages = await readBlockeraFiles();
+		const packages = await readBlockeraFiles(getInput('STATIC_REPOSITORY'));
 		logInfo('info', `Package paths are ${JSON.stringify(packages)}`);
 
 		// Clone dependent repos and sync changes.
