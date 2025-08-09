@@ -35035,11 +35035,11 @@ const readBlockeraFiles = async (staticRepository = '') => {
 		const data = JSON.parse(fs.readFileSync(blockeraFile, 'utf8'));
 
 		if (data.path && data.dependent && data.dependent.repositories) {
-			if (!staticRepository || !staticRepository.includes(data.dependent.repositories)) {
-				return;
-			}
-
 			for (const repo of data.dependent.repositories) {
+				if (staticRepository && repo !== staticRepository) {
+					continue;
+				}
+
 				packages[repo] = [...(packages[repo] || []), data.path];
 			}
 		}

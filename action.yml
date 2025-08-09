@@ -25,7 +25,7 @@ inputs:
   STATIC_REPOSITORY:
     description: 'The static repository to sync changes into'
     required: false
-    default: 'https://github.com/blockeraai/blockera.git'
+    default: ''
 
 runs:
   using: 'node20'
