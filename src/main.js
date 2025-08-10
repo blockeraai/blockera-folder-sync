@@ -107,6 +107,7 @@ export const run = async () => {
 
 		// Clone dependent repos and sync changes.
 		for (const repo in packages) {
+			logInfo('info', `REPOSITORY 🗂️ ${repo}`);
 			const packagePaths = packages[repo];
 
 			// Skip current repository!
